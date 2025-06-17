@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+// Definindo tipos para as seções
+type SectionKey = 'verbs' | 'vocabulary' | 'usefulPhrases' | 'grammar';
+
 export default function LessonFoodAndDrink() {
   const router = useRouter();
   const [openDrills, setOpenDrills] = useState({
@@ -13,20 +16,20 @@ export default function LessonFoodAndDrink() {
     grammar: false,
   });
 
-  const toggleDrill = (section) => {
+  // Função corrigida com tipo explícito para 'section'
+  const toggleDrill = (section: SectionKey) => {
     setOpenDrills({
       ...openDrills,
       [section]: !openDrills[section]
     });
   };
 
-  // Função para reproduzir áudio (CORRIGIDA)
-  const playAudio = (word) => {
-    // Formatação consistente: minúsculas, substitui espaços por _ e remove pontuação
+  // Função corrigida com tipo explícito para 'word'
+  const playAudio = (word: string) => {
     const formattedWord = word
       .toLowerCase()
-      .replace(/\s+/g, '_')  // Substitui espaços por underscores
-      .replace(/[^\w\s]/g, ''); // Remove pontuação
+      .replace(/\s+/g, '_')
+      .replace(/[^\w\s]/g, '');
     
     const audio = new Audio(`/audios/${formattedWord}.mp3`);
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
