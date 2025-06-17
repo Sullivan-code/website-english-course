@@ -88,7 +88,7 @@ export default function LessonFoodAndDrink() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
               <li>
                 <button 
-                  onClick={() => playAudio('toeat')} 
+                  onClick={() => playAudio('Toeat')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to eat
@@ -96,7 +96,7 @@ export default function LessonFoodAndDrink() {
               </li>
               <li>
                 <button 
-                  onClick={() => playAudio('todrink')} 
+                  onClick={() => playAudio('Todrink')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to drink
