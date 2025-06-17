@@ -88,7 +88,7 @@ export default function LessonFoodAndDrink() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
               <li>
                 <button 
-                  onClick={() => playAudio('to eat')} 
+                  onClick={() => playAudio('toeat')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to eat
@@ -96,7 +96,7 @@ export default function LessonFoodAndDrink() {
               </li>
               <li>
                 <button 
-                  onClick={() => playAudio('to drink')} 
+                  onClick={() => playAudio('todrink')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to drink
@@ -340,7 +340,7 @@ export default function LessonFoodAndDrink() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
               <li>
                 <button 
-                  onClick={() => playAudio('I eat crackers. And you?')} 
+                  onClick={() => playAudio('Ieatcrackersandyou')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I eat crackers. And you?
@@ -449,7 +449,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('You drink water')} 
+                  onClick={() => playAudio('you_drink_water.mp3')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   You drink water
@@ -520,7 +520,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('I eat bread. And you?')} 
+                        onClick={() => playAudio('ieatbreadandyou')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -589,7 +589,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('I eat bread with butter and drink coffee')} 
+                        onClick={() => playAudio('I_eat_bread_with_butter_and_drink_coffee')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -612,7 +612,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('We drink juice in the morning')} 
+                        onClick={() => playAudio('We_drink_juice_in_the_morning')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -635,7 +635,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('Do you prefer tea or coffee?')} 
+                        onClick={() => playAudio('Do_you_prefer_tea_or_coffee')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
