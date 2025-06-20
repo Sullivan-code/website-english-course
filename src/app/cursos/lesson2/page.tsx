@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { Pause, Play, RotateCcw, Volume2 } from "lucide-react";
+import { Pause, Play, RotateCcw, Volume2, ChevronDown, ChevronUp, X } from "lucide-react";
 
 const listenItems = [
   { 
@@ -175,6 +175,16 @@ export default function LessonFoodAndDrink() {
   const [draggedItem, setDraggedItem] = useState<{ id: number; option: string } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [usedOptions, setUsedOptions] = useState<Set<string>>(new Set());
+  const [mobileSelectedOption, setMobileSelectedOption] = useState<string | null>(null);
+  
+  // Estados para controle de expansão/recolhimento das seções
+  const [sections, setSections] = useState({
+    listen: true,
+    speak: true,
+    story: true,
+    negative: true,
+    pronoun: true
+  });
 
   // Exercícios de arrastar e soltar para negativas (CORRIGIDOS)
   const negativeExercises: DragExercise[] = [
@@ -357,6 +367,39 @@ export default function LessonFoodAndDrink() {
     setDragExercises(updatedExercises);
   };
 
+  // Função para seleção móvel
+  const handleMobileSelect = (option: string) => {
+    setMobileSelectedOption(option);
+  };
+
+  const handleMobileDrop = (exerciseId: number) => {
+    if (mobileSelectedOption) {
+      const updatedExercises = dragExercises.map(exercise => {
+        if (exercise.id === exerciseId) {
+          return { ...exercise, userAnswer: mobileSelectedOption };
+        }
+        return exercise;
+      });
+      setDragExercises(updatedExercises);
+      
+      // Marcar a opção como usada se estiver correta
+      const exercise = dragExercises.find(e => e.id === exerciseId);
+      if (exercise && exercise.correctAnswers.includes(mobileSelectedOption)) {
+        setUsedOptions(prev => new Set(prev).add(mobileSelectedOption));
+      }
+      
+      setMobileSelectedOption(null);
+    }
+  };
+
+  // Função para alternar expansão de seções
+  const toggleSection = (section: keyof typeof sections) => {
+    setSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   // Dividir a frase em partes para renderização
   const renderSentence = (exercise: DragExercise) => {
     const parts = exercise.sentence.split(exercise.blank);
@@ -366,7 +409,16 @@ export default function LessonFoodAndDrink() {
         {exercise.userAnswer ? (
           <span className="font-bold text-purple-600">{exercise.userAnswer}</span>
         ) : (
-          <span className="inline-block min-w-[60px] h-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded mx-1"></span>
+          <span 
+            className="inline-block min-w-[60px] h-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded mx-1 cursor-pointer"
+            onClick={() => mobileSelectedOption && handleMobileDrop(exercise.id)}
+          >
+            {mobileSelectedOption && (
+              <span className="text-xs text-gray-400 flex items-center justify-center h-full">
+                Clique para soltar
+              </span>
+            )}
+          </span>
         )}
         {parts[1]}
       </>
@@ -386,381 +438,447 @@ export default function LessonFoodAndDrink() {
         {/* LISTEN AND PRACTICE */}
         <div className="bg-orange-50 border-2 border-orange-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
           <div className="bg-orange-500 text-white py-4 px-8 flex items-center justify-between">
-            <div>
+            <div className="flex items-center">
               <h2 className="text-2xl font-bold">🔊 LISTEN AND PRACTICE</h2>
-              <p className="mt-2 text-orange-100 italic">
-                Clique no player para ouvir e escreva exatamente o que você está ouvindo.
-                Após escrever, clique em "Verificar" para ver a resposta correta.
-              </p>
+              <button 
+                onClick={() => toggleSection('listen')}
+                className="ml-4 p-2 rounded-full hover:bg-orange-600 transition"
+              >
+                {sections.listen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
             </div>
             <AudioPlayer src="/audios/l2_listenandpractice.mp3" />
           </div>
 
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
-            {listenItems.map((item) => (
-              <div key={item.key} className="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-orange-200">
-                <div className="w-[180px] h-[180px] relative mb-4">
-                  <Image 
-                    src={item.image} 
-                    alt={item.label} 
-                    fill
-                    className="rounded-lg object-cover border-2 border-orange-300"
-                  />
-                </div>
-
-                <div className="w-full mb-3">
-                  <textarea
-                    placeholder="Escreva aqui o que ouviu..."
-                    value={notes[item.key] || ""}
-                    onChange={(e) => handleChange(item.key, e.target.value)}
-                    className="w-full h-[80px] resize-none p-3 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => handleCheck(item.key)}
-                    className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition font-medium"
-                  >
-                    Verificar
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      handleChange(item.key, "");
-                      setShowAnswers(prev => ({ ...prev, [item.key]: false }));
-                    }}
-                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
-                  >
-                    Limpar
-                  </button>
-                </div>
-
-                {showAnswers[item.key] && (
-                  <div className="mt-3 w-full p-3 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-700">
-                      ✅ <span className="font-medium">Resposta correta:</span> {item.correctAnswer}
-                    </p>
+          {sections.listen && (
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+              {listenItems.map((item) => (
+                <div key={item.key} className="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-orange-200">
+                  <div className="w-[180px] h-[180px] relative mb-4">
+                    <Image 
+                      src={item.image} 
+                      alt={item.label} 
+                      fill
+                      className="rounded-lg object-cover border-2 border-orange-300"
+                    />
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+
+                  <div className="w-full mb-3">
+                    <textarea
+                      placeholder="Escreva aqui o que ouviu..."
+                      value={notes[item.key] || ""}
+                      onChange={(e) => handleChange(item.key, e.target.value)}
+                      className="w-full h-[80px] resize-none p-3 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={() => handleCheck(item.key)}
+                      className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition font-medium"
+                    >
+                      Verificar
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleChange(item.key, "");
+                        setShowAnswers(prev => ({ ...prev, [item.key]: false }));
+                      }}
+                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+
+                  {showAnswers[item.key] && (
+                    <div className="mt-3 w-full p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-sm text-green-700">
+                        ✅ <span className="font-medium">Resposta correta:</span> {item.correctAnswer}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* SPEAK RIGHT NOW */}
         <div className="bg-red-50 border-2 border-red-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
           <div className="bg-red-500 text-white py-4 px-8 flex items-center justify-between">
-            <div>
+            <div className="flex items-center">
               <h2 className="text-2xl font-bold">SPEAK RIGHT NOW</h2>
-              <p className="mt-2 text-red-100 italic">Pratique a pronúncia substituindo algumas palavras das frases abaixo:</p>
+              <button 
+                onClick={() => toggleSection('speak')}
+                className="ml-4 p-2 rounded-full hover:bg-red-600 transition"
+              >
+                {sections.speak ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
             </div>
           </div>
 
-          <div className="p-8">
-            <div className="mb-6 p-4 rounded-xl bg-white shadow">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-lg">— I eat bread and ham. And you?</p>
-                  <AudioPlayer src="/audios/I_eat_bread_and_ham.and_you.mp3" compact />
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-lg">— I eat bread and cheese.</p>
-                  <AudioPlayer src="/audios/I_eat_bread_and_cheese.mp3" compact />
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-6 p-4 rounded-xl bg-white shadow">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-lg">— I eat bread and I drink milk. And you?</p>
-                  <AudioPlayer src="/audios/I_eat_bread_and_i_drink_milk.and_you.mp3" compact />
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-lg">— I eat crackers and I drink juice.</p>
-                  <AudioPlayer src="/audios/ieatcrackersandidrinkjuice.mp3" compact />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-red-700 mb-4">Vocabulary Options:</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {[
-                  "bread", "crackers", "pancakes", "cheese", "ham",
-                  "juice", "water", "milk", "tea", "coffee"
-                ].map((item) => (
-                  <div key={item} className="relative group">
-                    <button
-                      onClick={() => new Audio(`/audios/${item}.mp3`).play()}
-                      className="w-full bg-red-200 hover:bg-red-300 text-red-800 py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Volume2 size={16} />
-                      {item}
-                    </button>
-                    <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      Clique para ouvir
-                    </span>
+          {sections.speak && (
+            <div className="p-8">
+              <div className="mb-6 p-4 rounded-xl bg-white shadow">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg">— I eat bread and ham. And you?</p>
+                    <AudioPlayer src="/audios/I_eat_bread_and_ham.and_you.mp3" compact />
                   </div>
-                ))}
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg">— I eat bread and cheese.</p>
+                    <AudioPlayer src="/audios/I_eat_bread_and_cheese.mp3" compact />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6 p-4 rounded-xl bg-white shadow">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg">— I eat bread and I drink milk. And you?</p>
+                    <AudioPlayer src="/audios/I_eat_bread_and_i_drink_milk.and_you.mp3" compact />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg">— I eat crackers and I drink juice.</p>
+                    <AudioPlayer src="/audios/ieatcrackersandidrinkjuice.mp3" compact />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-red-700 mb-4">Vocabulary Options:</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    "bread", "crackers", "pancakes", "cheese", "ham",
+                    "juice", "water", "milk", "tea", "coffee"
+                  ].map((item) => (
+                    <div key={item} className="relative group">
+                      <button
+                        onClick={() => new Audio(`/audios/${item}.mp3`).play()}
+                        className="w-full bg-red-200 hover:bg-red-300 text-red-800 py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Volume2 size={16} />
+                        {item}
+                      </button>
+                      <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        Clique para ouvir
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* BUILD YOUR OWN STORY */}
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
-          <div className="bg-yellow-500 text-white py-4 px-8">
-            <h2 className="text-2xl font-bold">🟨 BUILD YOUR OWN STORY</h2>
-            <p className="mt-2 text-yellow-100 italic">Complete a conversa abaixo com suas próprias palavras:</p>
-          </div>
-
-          <div className="p-8">
-            <div className="mb-6 flex justify-center">
-              <Image 
-                src="/images/l1_buildastory.png" 
-                alt="Cena de restaurante" 
-                width={600}
-                height={400}
-                className="rounded-xl border-2 border-yellow-300"
-              />
-            </div>
-
-            <div className="space-y-3">
-              {dialogues.map((dialogue, index) => (
-                <div 
-                  key={index} 
-                  className={`p-3 rounded-xl shadow-md ${
-                    index % 2 === 0 
-                      ? "bg-blue-50 border-2 border-blue-200" 
-                      : "bg-green-50 border-2 border-green-200"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="block text-xs font-semibold text-gray-500 mb-1">
-                        Nome do Personagem:
-                      </label>
-                      <input
-                        value={dialogue.speaker}
-                        onChange={(e) => handleDialogueSpeakerChange(index, e.target.value)}
-                        className="w-full p-2 border rounded-md font-bold bg-white text-sm"
-                        placeholder="Digite o nome"
-                      />
-                    </div>
-                  </div>
-                  
-                  {dialogue.fixed ? (
-                    <p className="text-gray-700 mt-2 text-sm">{dialogue.text}</p>
-                  ) : (
-                    <textarea
-                      value={dialogue.text}
-                      onChange={(e) => handleDialogueTextChange(index, e.target.value)}
-                      placeholder={`Escreva a fala do ${dialogue.speaker || 'personagem'}...`}
-                      className="w-full h-14 p-2 border rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent mt-2 text-sm"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 bg-yellow-100 border-2 border-yellow-300 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-yellow-800 mb-4">Dicas para sua história:</h3>
-              <ul className="list-disc pl-5 space-y-2 text-yellow-700 text-sm">
-                <li>Sinta-se livre para usar o tradutor ou ChatGPT para auxiliar no exercício.</li>
-                <li>Inclua alimentos e bebidas que você aprendeu nesta lição</li>
-                <li>Tente fazer perguntas como "And you?" para continuar a conversa</li>
-                <li>Use "I eat..." para comidas e "I drink..." para bebidas</li>
-                <li>Sequência sugerida: Pedido → Pergunta sobre acompanhamentos → Resposta → Confirmação</li>
-              </ul>
-            </div>
-
-            <div className="mt-6 text-center">
+          <div className="bg-yellow-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🟨 BUILD YOUR OWN STORY</h2>
               <button 
-                onClick={saveStory}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                onClick={() => toggleSection('story')}
+                className="ml-4 p-2 rounded-full hover:bg-yellow-600 transition"
               >
-                Salvar Minha História
+                {sections.story ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
               </button>
             </div>
           </div>
+
+          {sections.story && (
+            <div className="p-8">
+              <div className="mb-6 flex justify-center">
+                <Image 
+                  src="/images/l1_buildastory.png" 
+                  alt="Cena de restaurante" 
+                  width={600}
+                  height={400}
+                  className="rounded-xl border-2 border-yellow-300"
+                />
+              </div>
+
+              <div className="space-y-3">
+                {dialogues.map((dialogue, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-3 rounded-xl shadow-md ${
+                      index % 2 === 0 
+                        ? "bg-blue-50 border-2 border-blue-200" 
+                        : "bg-green-50 border-2 border-green-200"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">
+                          Nome do Personagem:
+                        </label>
+                        <input
+                          value={dialogue.speaker}
+                          onChange={(e) => handleDialogueSpeakerChange(index, e.target.value)}
+                          className="w-full p-2 border rounded-md font-bold bg-white text-sm"
+                          placeholder="Digite o nome"
+                        />
+                      </div>
+                    </div>
+                    
+                    {dialogue.fixed ? (
+                      <p className="text-gray-700 mt-2 text-sm">{dialogue.text}</p>
+                    ) : (
+                      <textarea
+                        value={dialogue.text}
+                        onChange={(e) => handleDialogueTextChange(index, e.target.value)}
+                        placeholder={`Escreva a fala do ${dialogue.speaker || 'personagem'}...`}
+                        className="w-full h-14 p-2 border rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent mt-2 text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 bg-yellow-100 border-2 border-yellow-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-yellow-800 mb-4">Dicas para sua história:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-yellow-700 text-sm">
+                  <li>Sinta-se livre para usar o tradutor ou ChatGPT para auxiliar no exercício.</li>
+                  <li>Inclua alimentos e bebidas que você aprendeu nesta lição</li>
+                  <li>Tente fazer perguntas como "And you?" para continuar a conversa</li>
+                  <li>Use "I eat..." para comidas e "I drink..." para bebidas</li>
+                  <li>Sequência sugerida: Pedido → Pergunta sobre acompanhamentos → Resposta → Confirmação</li>
+                </ul>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={saveStory}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                >
+                  Salvar Minha História
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* NEGATIVE SENTENCES DRILLS (CORRIGIDO) */}
         <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
-          <div className="bg-purple-600 text-white py-4 px-8">
-            <h2 className="text-2xl font-bold">🧠 NEGATIVE SENTENCES DRILLS</h2>
+          <div className="bg-purple-600 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🧠 NEGATIVE SENTENCES DRILLS</h2>
+              <button 
+                onClick={() => toggleSection('negative')}
+                className="ml-4 p-2 rounded-full hover:bg-purple-700 transition"
+              >
+                {sections.negative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
           </div>
 
-          <div className="p-8">
-            <p className="text-purple-700 mb-6 italic">
-              Pratique a construção de frases negativas usando "don't" e "doesn't". 
-              Arraste as palavras corretas para completar as frases.
-            </p>
-            
-            <div className="mb-6 bg-purple-100 border-2 border-purple-300 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-purple-800 mb-4">Regras de uso:</h3>
-              <ul className="list-disc pl-5 space-y-2 text-purple-700 text-sm">
-                <li><strong>Don't</strong> = Do not (usado com I, you, we, they)</li>
-                <li><strong>Doesn't</strong> = Does not (usado com he, she, it)</li>
-                <li>Com doesn't, o verbo principal fica na forma base, sem "s"</li>
-                <li>Exemplo: She <span className="font-bold">doesn't eat</span> (não "doesn't eats")</li>
-              </ul>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Opções para arrastar */}
-              <div className="bg-white p-4 rounded-xl border-2 border-purple-300">
-                <h3 className="text-lg font-bold text-purple-700 mb-3">Opções:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["don't", "do not", "doesn't", "does not"]
-                    .filter(option => !usedOptions.has(option))
-                    .map((option, idx) => (
-                      <div
-                        key={`option-${idx}`}
-                        className={`px-4 py-2 bg-purple-200 text-purple-800 rounded-lg cursor-move transition-all ${
-                          draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
-                        }`}
-                        draggable
-                        onDragStart={() => handleDragStart(0, option)}
-                        onDragEnd={handleDragEnd}
-                      >
-                        {option}
-                      </div>
-                    ))}
-                </div>
+          {sections.negative && (
+            <div className="p-8">
+              <p className="text-purple-700 mb-6 italic">
+                Pratique a construção de frases negativas usando "don't" e "doesn't". 
+                Arraste as palavras corretas para completar as frases.
+              </p>
+              
+              <div className="mb-6 bg-purple-100 border-2 border-purple-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-purple-800 mb-4">Regras de uso:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-purple-700 text-sm">
+                  <li><strong>Don't</strong> = Do not (usado com I, you, we, they)</li>
+                  <li><strong>Doesn't</strong> = Does not (usado com he, she, it)</li>
+                  <li>Com doesn't, o verbo principal fica na forma base, sem "s"</li>
+                  <li>Exemplo: She <span className="font-bold">doesn't eat</span> (não "doesn't eats")</li>
+                </ul>
               </div>
               
-              {/* Frases para completar */}
-              <div className="space-y-4">
-                {dragExercises
-                  .filter(ex => ex.id <= 4)
-                  .map((exercise) => (
-                    <div 
-                      key={exercise.id}
-                      className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm"
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(exercise.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-lg font-medium text-gray-800">
-                          {renderSentence(exercise)}
-                        </p>
-                        {exercise.userAnswer && (
-                          <button 
-                            onClick={() => resetDragExercise(exercise.id)}
-                            className="text-sm text-purple-600 hover:text-purple-800"
-                          >
-                            Redefinir
-                          </button>
-                        )}
+              {mobileSelectedOption && (
+                <div className="mb-4 p-3 bg-purple-200 rounded-lg flex items-center justify-between">
+                  <span className="font-medium text-purple-800">Selecionado: {mobileSelectedOption}</span>
+                  <button 
+                    onClick={() => setMobileSelectedOption(null)}
+                    className="p-1 bg-purple-500 text-white rounded-full"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Opções para arrastar */}
+                <div className="bg-white p-4 rounded-xl border-2 border-purple-300">
+                  <h3 className="text-lg font-bold text-purple-700 mb-3">Opções:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {["don't", "do not", "doesn't", "does not"]
+                      .filter(option => !usedOptions.has(option))
+                      .map((option, idx) => (
+                        <div
+                          key={`option-${idx}`}
+                          className={`px-4 py-2 bg-purple-200 text-purple-800 rounded-lg cursor-move transition-all ${
+                            draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
+                          }`}
+                          draggable
+                          onDragStart={() => handleDragStart(0, option)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => handleMobileSelect(option)}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                
+                {/* Frases para completar */}
+                <div className="space-y-4">
+                  {dragExercises
+                    .filter(ex => ex.id <= 4)
+                    .map((exercise) => (
+                      <div 
+                        key={exercise.id}
+                        className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm"
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(exercise.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-lg font-medium text-gray-800">
+                            {renderSentence(exercise)}
+                          </p>
+                          {exercise.userAnswer && (
+                            <button 
+                              onClick={() => resetDragExercise(exercise.id)}
+                              className="text-sm text-purple-600 hover:text-purple-800"
+                            >
+                              Redefinir
+                            </button>
+                          )}
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {exercise.userAnswer && (
+                            <span>
+                              {exercise.correctAnswers.includes(exercise.userAnswer) ? (
+                                <span className="text-green-600">✅ Correto!</span>
+                              ) : (
+                                <span className="text-red-600">❌ Respostas corretas: {exercise.correctAnswers.join(' ou ')}</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        {exercise.userAnswer && (
-                          <span>
-                            {exercise.correctAnswers.includes(exercise.userAnswer) ? (
-                              <span className="text-green-600">✅ Correto!</span>
-                            ) : (
-                              <span className="text-red-600">❌ Respostas corretas: {exercise.correctAnswers.join(' ou ')}</span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                }
+                    ))
+                  }
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* PRONOUN PRACTICE DRILLS */}
         <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden">
-          <div className="bg-indigo-600 text-white py-4 px-8">
-            <h2 className="text-2xl font-bold">💬 PRONOUN PRACTICE DRILLS</h2>
+          <div className="bg-indigo-600 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">💬 PRONOUN PRACTICE DRILLS</h2>
+              <button 
+                onClick={() => toggleSection('pronoun')}
+                className="ml-4 p-2 rounded-full hover:bg-indigo-700 transition"
+              >
+                {sections.pronoun ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
           </div>
 
-          <div className="p-8">
-            <p className="text-indigo-700 mb-6 italic">
-              Pratique o uso de pronomes (he, she, it) com verbos no presente simples. 
-              Arraste as formas verbais corretas para completar as frases.
-            </p>
-            
-            <div className="mb-6 bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-indigo-800 mb-4">Regras de uso:</h3>
-              <ul className="list-disc pl-5 space-y-2 text-indigo-700 text-sm">
-                <li><strong>He/She/It</strong> = Requerem verbo com "s" no final no presente simples</li>
-                <li>Exemplo: He <span className="font-bold">drinks</span>, she <span className="font-bold">eats</span>, it <span className="font-bold">tastes</span></li>
-                <li>Exceções: Verbos terminados em -ss, -sh, -ch, -x, -o → adicionam "es"</li>
-                <li>Exemplo: She <span className="font-bold">goes</span>, he <span className="font-bold">watches</span></li>
-              </ul>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Opções para arrastar */}
-              <div className="bg-white p-4 rounded-xl border-2 border-indigo-300">
-                <h3 className="text-lg font-bold text-indigo-700 mb-3">Opções:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["drinks", "eats", "prefers", "loves", "enjoys", "has", "likes", "wants"]
-                    .filter(option => !usedOptions.has(option))
-                    .map((option, idx) => (
-                      <div
-                        key={`option-${idx}`}
-                        className={`px-4 py-2 bg-indigo-200 text-indigo-800 rounded-lg cursor-move transition-all ${
-                          draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
-                        }`}
-                        draggable
-                        onDragStart={() => handleDragStart(0, option)}
-                        onDragEnd={handleDragEnd}
-                      >
-                        {option}
-                      </div>
-                    ))}
-                </div>
+          {sections.pronoun && (
+            <div className="p-8">
+              <p className="text-indigo-700 mb-6 italic">
+                Pratique o uso de pronomes (he, she, it) com verbos no presente simples. 
+                Arraste as formas verbais corretas para completar as frases.
+              </p>
+              
+              <div className="mb-6 bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4">Regras de uso:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-indigo-700 text-sm">
+                  <li><strong>He/She/It</strong> = Requerem verbo com "s" no final no presente simples</li>
+                  <li>Exemplo: He <span className="font-bold">drinks</span>, she <span className="font-bold">eats</span>, it <span className="font-bold">tastes</span></li>
+                  <li>Exceções: Verbos terminados em -ss, -sh, -ch, -x, -o → adicionam "es"</li>
+                  <li>Exemplo: She <span className="font-bold">goes</span>, he <span className="font-bold">watches</span></li>
+                </ul>
               </div>
               
-              {/* Frases para completar */}
-              <div className="space-y-4">
-                {dragExercises
-                  .filter(ex => ex.id > 4)
-                  .map((exercise) => (
-                    <div 
-                      key={exercise.id}
-                      className="p-4 bg-white rounded-xl border border-indigo-200 shadow-sm"
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(exercise.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-lg font-medium text-gray-800">
-                          {renderSentence(exercise)}
-                        </p>
-                        {exercise.userAnswer && (
-                          <button 
-                            onClick={() => resetDragExercise(exercise.id)}
-                            className="text-sm text-indigo-600 hover:text-indigo-800"
-                          >
-                            Redefinir
-                          </button>
-                        )}
+              {mobileSelectedOption && (
+                <div className="mb-4 p-3 bg-indigo-200 rounded-lg flex items-center justify-between">
+                  <span className="font-medium text-indigo-800">Selecionado: {mobileSelectedOption}</span>
+                  <button 
+                    onClick={() => setMobileSelectedOption(null)}
+                    className="p-1 bg-indigo-500 text-white rounded-full"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Opções para arrastar */}
+                <div className="bg-white p-4 rounded-xl border-2 border-indigo-300">
+                  <h3 className="text-lg font-bold text-indigo-700 mb-3">Opções:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {["drinks", "eats", "prefers", "loves", "enjoys", "has", "likes", "wants"]
+                      .filter(option => !usedOptions.has(option))
+                      .map((option, idx) => (
+                        <div
+                          key={`option-${idx}`}
+                          className={`px-4 py-2 bg-indigo-200 text-indigo-800 rounded-lg cursor-move transition-all ${
+                            draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
+                          }`}
+                          draggable
+                          onDragStart={() => handleDragStart(0, option)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => handleMobileSelect(option)}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                
+                {/* Frases para completar */}
+                <div className="space-y-4">
+                  {dragExercises
+                    .filter(ex => ex.id > 4)
+                    .map((exercise) => (
+                      <div 
+                        key={exercise.id}
+                        className="p-4 bg-white rounded-xl border border-indigo-200 shadow-sm"
+                        onDragOver={handleDragOver}
+                        onDrop={() => handleDrop(exercise.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-lg font-medium text-gray-800">
+                            {renderSentence(exercise)}
+                          </p>
+                          {exercise.userAnswer && (
+                            <button 
+                              onClick={() => resetDragExercise(exercise.id)}
+                              className="text-sm text-indigo-600 hover:text-indigo-800"
+                            >
+                              Redefinir
+                            </button>
+                          )}
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {exercise.userAnswer && (
+                            <span>
+                              {exercise.correctAnswers.includes(exercise.userAnswer) ? (
+                                <span className="text-green-600">✅ Correto!</span>
+                              ) : (
+                                <span className="text-red-600">❌ Respostas possíveis: {exercise.correctAnswers.join(', ')}</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        {exercise.userAnswer && (
-                          <span>
-                            {exercise.correctAnswers.includes(exercise.userAnswer) ? (
-                              <span className="text-green-600">✅ Correto!</span>
-                            ) : (
-                              <span className="text-red-600">❌ Respostas possíveis: {exercise.correctAnswers.join(', ')}</span>
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                }
+                    ))
+                  }
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
