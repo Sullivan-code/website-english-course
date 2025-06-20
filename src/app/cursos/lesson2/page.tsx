@@ -880,7 +880,23 @@ export default function LessonFoodAndDrink() {
             </div>
           )}
         </div>
+                <div className="flex justify-center gap-4 mt-8">
+          <button
+            onClick={() => router.push("https://website-english-course.vercel.app/cursos/lesson1")}
+            className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+          >
+            &larr; Lição Anterior
+          </button>
+          <button
+            onClick={() => router.push("/cursos/lesson3")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+          >
+            Próxima Lição &rarr;
+          </button>
+        </div>
       </div>
     </div>
+
+    
   );
 }
