@@ -449,7 +449,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('you_drink_water.mp3')} 
+                  onClick={() => playAudio('you_drink_water')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   You drink water
@@ -457,7 +457,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('I drink coffee with milk')} 
+                  onClick={() => playAudio('idrinkcoffeewithmilk')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I drink coffee with milk
