@@ -24,12 +24,12 @@ export default function LessonFoodAndDrink() {
     });
   };
 
-  // Função corrigida para preservar underscores
+  // Função corrigida com tipo explícito para 'word'
   const playAudio = (word: string) => {
     const formattedWord = word
       .toLowerCase()
-      .replace(/\s+/g, '_')  // Substitui espaços por underscores
-      .replace(/[^\w_]/g, ''); // Preserva underscores e caracteres alfanuméricos
+      .replace(/\s+/g, '_')
+      .replace(/[^\w\s]/g, '');
     
     const audio = new Audio(`/audios/${formattedWord}.mp3`);
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
@@ -340,7 +340,7 @@ export default function LessonFoodAndDrink() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
               <li>
                 <button 
-                  onClick={() => playAudio('i_crackers_and_you')} 
+                  onClick={() => playAudio('i_eat_crackers_and_you')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I eat crackers. And you?
@@ -348,7 +348,7 @@ export default function LessonFoodAndDrink() {
               </li>
               <li>
                 <button 
-                  onClick={() => playAudio('i_drink_coffee_with_milk')} 
+                  onClick={() => playAudio('idrinkcoffeewithmilk')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I drink coffee with milk
@@ -417,7 +417,7 @@ export default function LessonFoodAndDrink() {
             <div className="bg-blue-50 p-4 rounded-[20px] text-gray-800 space-y-3 mb-6">
               <p>
                 <button 
-                  onClick={() => playAudio('i_eat_pancakes')} 
+                  onClick={() => playAudio('I eat pancakes')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I eat pancakes
@@ -425,7 +425,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('you_eat_cookies')} 
+                  onClick={() => playAudio('You eat cookies')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   You eat cookies
@@ -433,7 +433,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('i_eat_bread_and_ham')} 
+                  onClick={() => playAudio('I eat bread and ham')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I eat bread and ham
@@ -441,7 +441,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('i_drink_coffee')} 
+                  onClick={() => playAudio('I drink coffee')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I drink coffee
@@ -457,7 +457,7 @@ export default function LessonFoodAndDrink() {
               </p>
               <p>
                 <button 
-                  onClick={() => playAudio('i_drink_coffee_with_milk')} 
+                  onClick={() => playAudio('idrinkcoffeewithmilk')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I drink coffee with milk
@@ -520,7 +520,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('i_eat_bread_and_you')} 
+                        onClick={() => playAudio('ieatbreadandyou')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -543,7 +543,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('i_drink_coffee_with_milk')} 
+                        onClick={() => playAudio('idrinkcoffeewithmilk')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -848,4 +848,4 @@ export default function LessonFoodAndDrink() {
       </div>
     </div>
   );
-}                         
+}
