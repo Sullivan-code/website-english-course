@@ -543,7 +543,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('I drink coffee with milk')} 
+                        onClick={() => playAudio('I_drink_coffee_with_milk2')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -566,7 +566,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('Do you eat ham and cheese?')} 
+                        onClick={() => playAudio('Do_you_eat_ham_and_cheese')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -589,29 +589,6 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('I_eat_bread_with_butter_and_drink_coffee')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          4. I eat bread with <span 
-                            className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('butter')}
-                          >butter</span> and drink coffee
-                        </p>
-                        <p className="text-sm text-gray-600">Eu como pão com manteiga e bebo café.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
                         onClick={() => playAudio('We_drink_juice_in_the_morning')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
@@ -622,7 +599,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          5. We drink <span 
+                          4. We drink <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('juice')}
                           >juice</span> in the morning
@@ -645,7 +622,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          6. Do you prefer <span 
+                          5. Do you prefer <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('tea')}
                           >tea</span> or coffee?
@@ -658,7 +635,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('They eat pancakes for breakfast')} 
+                        onClick={() => playAudio('They_eat_pancakes_for_breakfast')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -668,7 +645,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          7. They eat <span 
+                          6. They eat <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('pancakes')}
                           >pancakes</span> for breakfast
@@ -681,7 +658,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('I like bread and cheese')} 
+                        onClick={() => playAudio('I_like_bread_and_cheese')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -691,7 +668,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          8. I like <span 
+                          7. I like <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('bread')}
                           >bread</span> and cheese.
@@ -704,7 +681,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('Do you drink water with ice?')} 
+                        onClick={() => playAudio('Do_you_drink_water_with_ice')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -714,7 +691,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          9. Do you drink water with <span 
+                          8. Do you drink water with <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('ice')}
                           >ice</span>?
@@ -727,7 +704,7 @@ export default function LessonFoodAndDrink() {
                   <div className="group">
                     <div className="flex items-start">
                       <button 
-                        onClick={() => playAudio('We eat cookies with tea')} 
+                        onClick={() => playAudio('We_eat_cookies_with_tea')} 
                         className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
                         aria-label="Play audio"
                       >
@@ -737,7 +714,7 @@ export default function LessonFoodAndDrink() {
                       </button>
                       <div>
                         <p className="text-lg font-medium">
-                          10. We eat <span 
+                          9. We eat <span 
                             className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
                             onClick={() => playAudio('cookies')}
                           >cookies</span> with tea
