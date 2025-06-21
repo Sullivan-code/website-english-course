@@ -258,7 +258,7 @@ export default function LessonFoodAndDrink() {
               </li>
               <li>
                 <button 
-                  onClick={() => playAudio('Ii')} 
+                  onClick={() => playAudio('I')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   I
