@@ -55,7 +55,7 @@ export default function LessonFoodAndDrink() {
           </p>
           <div className="w-64 h-64 mx-auto">
             <Image
-              src="/images/lesson3-intro.jpg"
+              src="/images/lesson3-bg.jpg"
               alt="Lesson intro"
               width={256}
               height={256}
