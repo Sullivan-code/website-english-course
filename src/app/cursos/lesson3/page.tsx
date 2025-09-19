@@ -85,7 +85,7 @@ export default function LessonFoodAndDrink() {
             <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
               <li>
                 <button 
-                  onClick={() => playAudio('to want')} 
+                  onClick={() => playAudio('towant')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to want
@@ -93,7 +93,7 @@ export default function LessonFoodAndDrink() {
               </li>
               <li>
                 <button 
-                  onClick={() => playAudio('to like')} 
+                  onClick={() => playAudio('tolike')} 
                   className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
                 >
                   to like
@@ -110,22 +110,22 @@ export default function LessonFoodAndDrink() {
                   <p className="text-lg font-medium text-gray-800">2. Você <span className="text-blue-600">gosta</span> de chocolate? / quer / come</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800">3. Nós <span className="text-blue-600">queremos</span> torradas. / gostamos / bebemos</p>
+                  <p className="text-lg font-medium text-gray-800">3. Nós <span className="text-blue-600">queremos</span> torradas. / gostamos / preferimos</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
                   <p className="text-lg font-medium text-gray-800">4. Eles <span className="text-blue-600">gostam</span> de frutas. / querem / comem</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800">5. Ela <span className="text-blue-600">quer</span> iogurte. / gosta / bebe</p>
+                  <p className="text-lg font-medium text-gray-800">5. Ela <span className="text-blue-600">quer</span> iogurte. / gosta / toma</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800">6. Eu não <span className="text-blue-600">quero</span> ovos. / gosto / como</p>
+                  <p className="text-lg font-medium text-gray-800">6. Eu não <span className="text-blue-600">quero</span> ovos. / gosto / prefiro</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
                   <p className="text-lg font-medium text-gray-800">7. Você não <span className="text-blue-600">gosta</span> de geleia? / quer / come</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800">8. Eu <span className="text-blue-600">gosto</span> de comer cereal. / quero / bebo</p>
+                  <p className="text-lg font-medium text-gray-800">8. Eu <span className="text-blue-600">gosto</span> de comer cereal. / quero / biscoitos salgados</p>
                 </div>
                 <div className="p-4 bg-white rounded-xl border border-blue-200">
                   <p className="text-lg font-medium text-gray-800">9. Nós <span className="text-blue-600">queremos</span> beber suco. / gostamos / bebemos</p>
@@ -481,7 +481,7 @@ export default function LessonFoodAndDrink() {
         </div>
 
 
-        {/* Seção 5 - Real Life */}
+        {/* Seção 5 - Real Life Practice*/}
         <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
           <div className="bg-blue-500 text-white py-4 px-8">
             <h2 className="text-2xl font-bold">Real Life Practice</h2>
@@ -731,7 +731,7 @@ export default function LessonFoodAndDrink() {
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
                       <Image
-                        src="/images/lesson3-cafe.jpg"
+                        src="/images/rl-image-1.jpg"
                         alt="Café da manhã saudável"
                         layout="fill"
                         objectFit="cover"
@@ -746,7 +746,7 @@ export default function LessonFoodAndDrink() {
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
                       <Image
-                        src="/images/lesson3-dessert.jpg"
+                        src="/images/rl-image-2.jpg"
                         alt="Sobremesas e tortas"
                         layout="fill"
                         objectFit="cover"
@@ -769,7 +769,7 @@ export default function LessonFoodAndDrink() {
             <div>
               <h2 className="text-3xl font-bold">CHECK IT OUT!</h2>
               <p className="mt-2 text-blue-100 italic">
-                Pratique estruturas essenciais para falar sobre preferências
+                Pratique estruturas essenciais para falar sobre preferências e pratique-as com o conteúdo que você já aprendeu.
               </p>
             </div>
           </div>
@@ -786,7 +786,7 @@ export default function LessonFoodAndDrink() {
             {/* Coluna central - Imagem e balão */}
             <div className="bg-white flex-1 p-6 flex flex-col items-center justify-center text-xl relative">
               <Image
-                src="/images/lesson3-checkitout.jpg"
+                src="/images/cio-image-1.jpg"
                 alt="Mulher escolhendo alimentos"
                 width={160}
                 height={160}
