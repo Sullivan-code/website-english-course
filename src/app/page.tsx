@@ -11,7 +11,7 @@ export default function Home() {
           Eric Sullivan - Inglês para Profissionais.
         </h1>
         <p className="text-2xl text-[#333] max-w-3xl mx-auto mb-8">
-          Bem-vindo ao curso que vai transformar sua relação com o inglês!
+          Bem-vindo ao curso que vai transformar sua relação com o inglêsssss!
           Você está preparado para finalmente mudar a sua vida com o inglês ou
           vai apenas assistir a gente mudando a nossa?
         </p>
