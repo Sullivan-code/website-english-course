@@ -36,7 +36,7 @@ export default function LessonFoodAndDrink() {
     <div
       className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
       style={{
-        backgroundImage: `url("/images/lesson1-bg.jpg")`,
+        backgroundImage: `url("/images/lesson3-bg.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
