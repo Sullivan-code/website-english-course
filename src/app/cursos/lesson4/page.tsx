@@ -10,40 +10,91 @@ import { Pause, Play, RotateCcw, Volume2, ChevronDown, ChevronUp, X } from "luci
 
 const listenItems = [
   { 
-    key: "pancakes", 
+    key: "a-like-coffee", 
     label: "", 
-    image: "/images/pancakes-and-butter.jpg", 
-    correctAnswer: "I eat pancakes and butter. And you?" 
+    image: "/images/coffee-image.jpg", 
+    correctAnswer: "I like to drink coffee.",
+    originalSentence: "I drink coffee. (like)"
   },
   { 
-    key: "bread-ham", 
-    label: "", 
-    image: "/images/breadandham-image.jpg", 
-    correctAnswer: "I eat bread and ham. And you?" 
-  },
-  { 
-    key: "cookies", 
-    label: "", 
-    image: "/images/cookies-image.jpg", 
-    correctAnswer: "You eat cookies." 
-  },
-  { 
-    key: "tea", 
-    label: "", 
-    image: "/images/tea-image.jpg", 
-    correctAnswer: "I drink tea." 
-  },
-  { 
-    key: "coffee", 
-    label: "", 
-    image: "/images/coffeewithmilk-image.jpg", 
-    correctAnswer: "I drink coffee with milk." 
-  },
-  { 
-    key: "bread-butter", 
+    key: "b-want-bread", 
     label: "", 
     image: "/images/breadandbutter-image.jpg", 
-    correctAnswer: "I eat bread and butter." 
+    correctAnswer: "I want to eat bread and butter for breakfast.",
+    originalSentence: "I eat bread and butter for breakfast. (want)"
+  },
+  { 
+    key: "c-want-juice", 
+    label: "", 
+    image: "/images/orange-juice.jpg", 
+    correctAnswer: "I want to drink orange juice.",
+    originalSentence: "I drink orange juice. (want)"
+  },
+  { 
+    key: "d-like-pancakes", 
+    label: "", 
+    image: "/images/pancakes-and-butter.jpg", 
+    correctAnswer: "I like to eat banana pancakes for breakfast.",
+    originalSentence: "I eat banana pancakes for breakfast. (like)"
+  },
+  { 
+    key: "e-like-cereal", 
+    label: "", 
+    image: "/images/cereal-and-honey.jpg", 
+    correctAnswer: "I like to eat cereal and honey.",
+    originalSentence: "I eat cereal and honey. (like)"
+  },
+  { 
+    key: "f-want-cereal", 
+    label: "", 
+    image: "/images/cereal.jpg", 
+    correctAnswer: "I want to eat cereal for breakfast.",
+    originalSentence: "I eat cereal for breakfast. (want)"
+  },
+];
+
+const example2Items = [
+  { 
+    key: "a-eggs", 
+    label: "", 
+    image: "/images/eggs-breakfast.jpg", 
+    correctAnswer: "I don't want to eat eggs for breakfast.",
+    originalSentence: "I want to eat eggs for breakfast. (negative)"
+  },
+  { 
+    key: "b-water", 
+    label: "", 
+    image: "/images/water.jpg", 
+    correctAnswer: "I don't want to drink water.",
+    originalSentence: "I want to drink water. (negative)"
+  },
+  { 
+    key: "c-chocolate", 
+    label: "", 
+    image: "/images/chocolate-image.jpg", 
+    correctAnswer: "I don't want to eat a piece of chocolate.",
+    originalSentence: "I want to eat a piece of chocolate. (negative)"
+  },
+  { 
+    key: "d-pie", 
+    label: "", 
+    image: "/images/apple-pie-image.jpg", 
+    correctAnswer: "I don't want a slice of apple pie.",
+    originalSentence: "I want a slice of apple pie. (negative)"
+  },
+  { 
+    key: "e-tea", 
+    label: "", 
+    image: "/images/apple-tea-image.jpg", 
+    correctAnswer: "I don't want to drink apple tea.",
+    originalSentence: "I want to drink apple tea. (negative)"
+  },
+  { 
+    key: "f-coffee-milk", 
+    label: "", 
+    image: "/images/coffeewithmilk-image.jpg", 
+    correctAnswer: "I don't want to drink coffee with milk.",
+    originalSentence: "I want to drink coffee with milk. (negative)"
   },
 ];
 
@@ -150,6 +201,29 @@ const AudioPlayer = ({ src, compact = false }: AudioPlayerProps) => {
   );
 };
 
+// Componente simples para tocar áudio
+const SimpleAudioPlayer = ({ src }: { src: string }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(err => console.error("Error playing audio:", err));
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={playAudio}
+        className="p-1 bg-green-500 text-white rounded-full hover:bg-green-600"
+      >
+        <Volume2 size={14} />
+      </button>
+      <audio ref={audioRef} src={src} preload="none" />
+    </div>
+  );
+};
+
 interface DragExercise {
   id: number;
   sentence: string;
@@ -163,99 +237,28 @@ export default function LessonFoodAndDrink() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [notes2, setNotes2] = useState<Record<string, string>>({});
   const [showAnswers, setShowAnswers] = useState<Record<string, boolean>>({});
-  const [dialogues, setDialogues] = useState([
-    { speaker: "waiter", text: "May I take your order?", fixed: true },
-    { speaker: "customer", text: "", fixed: false },
-    { speaker: "waiter", text: "", fixed: false },
-    { speaker: "customer", text: "", fixed: false },
-    { speaker: "waiter", text: "", fixed: false }
-  ]);
-  const [dragExercises, setDragExercises] = useState<DragExercise[]>([]);
-  const [draggedItem, setDraggedItem] = useState<{ id: number; option: string } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [usedOptions, setUsedOptions] = useState<Set<string>>(new Set());
-  const [mobileSelectedOption, setMobileSelectedOption] = useState<string | null>(null);
+  const [showAnswers2, setShowAnswers2] = useState<Record<string, boolean>>({});
+  const [practiceAnswers, setPracticeAnswers] = useState<Record<string, string>>({});
+  const [showPracticeAnswers, setShowPracticeAnswers] = useState<Record<string, boolean>>({});
+  const [grammarAnswers, setGrammarAnswers] = useState<Record<string, string>>({});
+  const [showGrammarAnswers, setShowGrammarAnswers] = useState<Record<string, boolean>>({});
   
   // Estados para controle de expansão/recolhimento das seções
   const [sections, setSections] = useState({
-    listen: true,
-    speak: true,
-    story: true,
-    negative: true,
-    pronoun: true
+    fluency: true,
+    grammar: true,
+    speaking: true,
+    pronunciation: true
   });
-
-  // Exercícios de arrastar e soltar para negativas (CORRIGIDOS)
-  const negativeExercises: DragExercise[] = [
-    {
-      id: 1,
-      sentence: "I ______ drink coffee.",
-      blank: "______",
-      options: ["don't", "do not"],
-      correctAnswers: ["don't", "do not"],
-      userAnswer: null
-    },
-    {
-      id: 2,
-      sentence: "He ______ eat meat.",
-      blank: "______",
-      options: ["doesn't", "does not"],
-      correctAnswers: ["doesn't", "does not"],
-      userAnswer: null
-    },
-    {
-      id: 3,
-      sentence: "We ______ want juice.",
-      blank: "______",
-      options: ["don't", "do not"],
-      correctAnswers: ["don't", "do not"],
-      userAnswer: null
-    },
-    {
-      id: 4,
-      sentence: "She ______ like tea.",
-      blank: "______",
-      options: ["doesn't", "does not"],
-      correctAnswers: ["doesn't", "does not"],
-      userAnswer: null
-    }
-  ];
-
-  // Exercícios de arrastar e soltar para pronomes
-  const pronounExercises: DragExercise[] = [
-    {
-      id: 6,
-      sentence: "My father ______ bread every morning.",
-      blank: "______",
-      options: ["eats", "has", "enjoys", "loves", "likes", "prefers"],
-      correctAnswers: ["eats", "has", "enjoys", "loves", "likes", "prefers"],
-      userAnswer: null
-    },
-    {
-      id: 7,
-      sentence: "The cat ______ milk.",
-      blank: "______",
-      options: ["drinks", "loves", "prefers", "enjoys", "likes", "wants"],
-      correctAnswers: ["drinks", "loves", "prefers", "enjoys", "likes", "wants"],
-      userAnswer: null
-    },
-    {
-      id: 8,
-      sentence: "John ______ green tea.",
-      blank: "______",
-      options: ["prefers", "likes", "drinks", "enjoys", "loves", "has"],
-      correctAnswers: ["prefers", "likes", "drinks", "enjoys", "loves", "has"],
-      userAnswer: null
-    }
-  ];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
         
-        // Carregar notas dos exercícios de escuta
+        // Carregar notas dos exercícios do exemplo 1
         const newNotes: Record<string, string> = {};
         for (const item of listenItems) {
           const ref = doc(db, "userNotes", `${user.uid}_${item.key}`);
@@ -264,132 +267,57 @@ export default function LessonFoodAndDrink() {
         }
         setNotes(newNotes);
         
-        // Carregar história salva
-        const storyRef = doc(db, "userStories", `${user.uid}_lesson2`);
-        const storySnap = await getDoc(storyRef);
-        if (storySnap.exists() && storySnap.data().dialogues) {
-          setDialogues(storySnap.data().dialogues);
+        // Carregar notas dos exercícios do exemplo 2
+        const newNotes2: Record<string, string> = {};
+        for (const item of example2Items) {
+          const ref = doc(db, "userNotes", `${user.uid}_${item.key}`);
+          const snap = await getDoc(ref);
+          newNotes2[item.key] = snap.exists() ? snap.data().text : "";
         }
+        setNotes2(newNotes2);
       }
     });
-    
-    // Inicializar exercícios de arrastar
-    setDragExercises([...negativeExercises, ...pronounExercises]);
     
     return () => unsubscribe();
   }, []);
 
-  const handleChange = (key: string, value: string) => {
-    setNotes((prev) => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: string, isExample2 = false) => {
+    if (isExample2) {
+      setNotes2((prev) => ({ ...prev, [key]: value }));
+    } else {
+      setNotes((prev) => ({ ...prev, [key]: value }));
+    }
   };
 
-  const handleCheck = (key: string) => {
-    setShowAnswers((prev) => ({ ...prev, [key]: true }));
+  const handlePracticeChange = (key: string, value: string) => {
+    setPracticeAnswers((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleGrammarChange = (key: string, value: string) => {
+    setGrammarAnswers((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCheck = (key: string, isExample2 = false) => {
+    if (isExample2) {
+      setShowAnswers2((prev) => ({ ...prev, [key]: true }));
+    } else {
+      setShowAnswers((prev) => ({ ...prev, [key]: true }));
+    }
     
     if (userId) {
       const ref = doc(db, "userNotes", `${userId}_${key}`);
-      setDoc(ref, { text: notes[key] }, { merge: true })
+      const text = isExample2 ? notes2[key] : notes[key];
+      setDoc(ref, { text }, { merge: true })
         .catch(error => console.error("Error saving note: ", error));
     }
   };
 
-  const handleDialogueTextChange = (index: number, value: string) => {
-    const newDialogues = [...dialogues];
-    newDialogues[index] = { ...newDialogues[index], text: value };
-    setDialogues(newDialogues);
+  const handlePracticeCheck = (key: string, correctAnswer: string) => {
+    setShowPracticeAnswers((prev) => ({ ...prev, [key]: true }));
   };
 
-  const handleDialogueSpeakerChange = (index: number, value: string) => {
-    const newDialogues = [...dialogues];
-    newDialogues[index] = { ...newDialogues[index], speaker: value };
-    setDialogues(newDialogues);
-  };
-
-  const saveStory = async () => {
-    if (userId) {
-      const ref = doc(db, "userStories", `${userId}_lesson2`);
-      await setDoc(ref, { dialogues });
-      alert("História salva com sucesso!");
-    }
-  };
-
-  // Funções para arrastar e soltar
-  const handleDragStart = (id: number, option: string) => {
-    setDraggedItem({ id, option });
-    setIsDragging(true);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (exerciseId: number) => {
-    if (draggedItem) {
-      const updatedExercises = dragExercises.map(exercise => {
-        if (exercise.id === exerciseId) {
-          return { ...exercise, userAnswer: draggedItem.option };
-        }
-        return exercise;
-      });
-      setDragExercises(updatedExercises);
-      
-      // Marcar a opção como usada se estiver correta
-      const exercise = dragExercises.find(e => e.id === exerciseId);
-      if (exercise && exercise.correctAnswers.includes(draggedItem.option)) {
-        setUsedOptions(prev => new Set(prev).add(draggedItem.option));
-      }
-      
-      setDraggedItem(null);
-      setIsDragging(false);
-    }
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    setDraggedItem(null);
-  };
-
-  const resetDragExercise = (id: number) => {
-    const updatedExercises = dragExercises.map(exercise => {
-      if (exercise.id === id) {
-        // Remover da lista de opções usadas
-        if (exercise.userAnswer) {
-          setUsedOptions(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(exercise.userAnswer!);
-            return newSet;
-          });
-        }
-        return { ...exercise, userAnswer: null };
-      }
-      return exercise;
-    });
-    setDragExercises(updatedExercises);
-  };
-
-  // Função para seleção móvel
-  const handleMobileSelect = (option: string) => {
-    setMobileSelectedOption(option);
-  };
-
-  const handleMobileDrop = (exerciseId: number) => {
-    if (mobileSelectedOption) {
-      const updatedExercises = dragExercises.map(exercise => {
-        if (exercise.id === exerciseId) {
-          return { ...exercise, userAnswer: mobileSelectedOption };
-        }
-        return exercise;
-      });
-      setDragExercises(updatedExercises);
-      
-      // Marcar a opção como usada se estiver correta
-      const exercise = dragExercises.find(e => e.id === exerciseId);
-      if (exercise && exercise.correctAnswers.includes(mobileSelectedOption)) {
-        setUsedOptions(prev => new Set(prev).add(mobileSelectedOption));
-      }
-      
-      setMobileSelectedOption(null);
-    }
+  const handleGrammarCheck = (key: string, correctAnswer: string) => {
+    setShowGrammarAnswers((prev) => ({ ...prev, [key]: true }));
   };
 
   // Função para alternar expansão de seções
@@ -400,158 +328,446 @@ export default function LessonFoodAndDrink() {
     }));
   };
 
-  // Dividir a frase em partes para renderização
-  const renderSentence = (exercise: DragExercise) => {
-    const parts = exercise.sentence.split(exercise.blank);
-    return (
-      <>
-        {parts[0]}
-        {exercise.userAnswer ? (
-          <span className="font-bold text-purple-600">{exercise.userAnswer}</span>
-        ) : (
-          <span 
-            className="inline-block min-w-[60px] h-8 bg-gray-100 border-2 border-dashed border-gray-300 rounded mx-1 cursor-pointer"
-            onClick={() => mobileSelectedOption && handleMobileDrop(exercise.id)}
-          >
-            {mobileSelectedOption && (
-              <span className="text-xs text-gray-400 flex items-center justify-center h-full">
-                Clique para soltar
-              </span>
-            )}
-          </span>
-        )}
-        {parts[1]}
-      </>
-    );
-  };
+  const practiceExercises = [
+    { key: "practice-1", sentence: "I drink __________. (like)", answer: "I like to drink [bebida]." },
+    { key: "practice-2", sentence: "I eat __________ for lunch. (want)", answer: "I want to eat [comida] for lunch." },
+    { key: "practice-3", sentence: "I drink __________ in the morning. (want)", answer: "I want to drink [bebida] in the morning." },
+    { key: "practice-4", sentence: "I eat __________ for breakfast. (like)", answer: "I like to eat [comida] for breakfast." },
+    { key: "practice-5", sentence: "I eat __________ with honey. (like)", answer: "I like to eat [comida] with honey." },
+    { key: "practice-6", sentence: "I eat __________ at night. (want)", answer: "I want to eat [comida] at night." }
+  ];
+
+  const grammarExercises = [
+    { 
+      key: "grammar-1", 
+      sentence: "I drink tea every day. (like)", 
+      correctAnswer: "I like to drink tea every day.",
+      audio: "/audios/i-drink-tea-everyday.mp3"
+    },
+    { 
+      key: "grammar-2", 
+      sentence: "We eat dinner at 7 PM. (want)", 
+      correctAnswer: "We want to eat dinner at 7 PM.",
+      audio: "/audios/we-eat-dinner-at-7pm.mp3"
+    },
+    { 
+      key: "grammar-3", 
+      sentence: "He wants to eat chocolate. (negative)", 
+      correctAnswer: "He doesn't want to eat chocolate.",
+      audio: "/audios/he-wants-to-eat-chocolate.mp3"
+    }
+  ];
 
   return (
     <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/lesson1-86.jpg')` }}>
       <div className="max-w-5xl mx-auto bg-white bg-opacity-95 rounded-[40px] p-10 shadow-lg">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">Lesson 4 - Food & Drink</h1>
+          <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">📖 Lesson 4 – Food & Drink</h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            🎧 Esta lição foi feita para treinar a escuta em inglês. Ouça com atenção e escreva exatamente o que você ouviu.
+            🎧 Esta lição foi feita para praticar estruturas com "like" e "want". Complete os exercícios e pratique a pronúncia.
           </p>
         </div>
 
-        {/* LISTEN AND PRACTICE */}
+        {/* FLUENCY */}
         <div className="bg-orange-50 border-2 border-orange-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
           <div className="bg-orange-500 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
-              <h2 className="text-2xl font-bold">🔊 LISTEN AND PRACTICE</h2>
+              <h2 className="text-2xl font-bold">🔹 FLUENCY</h2>
               <button 
-                onClick={() => toggleSection('listen')}
+                onClick={() => toggleSection('fluency')}
                 className="ml-4 p-2 rounded-full hover:bg-orange-600 transition"
               >
-                {sections.listen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                {sections.fluency ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
               </button>
             </div>
-            <AudioPlayer src="/audios/l2_listenandpractice.mp3" />
           </div>
 
-          {sections.listen && (
-            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
-              {listenItems.map((item) => (
-                <div key={item.key} className="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-orange-200">
-                  <div className="w-[180px] h-[180px] relative mb-4">
-                    <Image 
-                      src={item.image} 
-                      alt={item.label} 
-                      fill
-                      className="rounded-lg object-cover border-2 border-orange-300"
-                    />
-                  </div>
-
-                  <div className="w-full mb-3">
-                    <textarea
-                      placeholder="Escreva aqui o que ouviu..."
-                      value={notes[item.key] || ""}
-                      onChange={(e) => handleChange(item.key, e.target.value)}
-                      className="w-full h-[80px] resize-none p-3 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="flex gap-3 w-full">
-                    <button
-                      onClick={() => handleCheck(item.key)}
-                      className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition font-medium"
-                    >
-                      Verificar
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        handleChange(item.key, "");
-                        setShowAnswers(prev => ({ ...prev, [item.key]: false }));
-                      }}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
-                    >
-                      Limpar
-                    </button>
-                  </div>
-
-                  {showAnswers[item.key] && (
-                    <div className="mt-3 w-full p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-700">
-                        ✅ <span className="font-medium">Resposta correta:</span> {item.correctAnswer}
-                      </p>
-                    </div>
-                  )}
+          {sections.fluency && (
+            <div className="p-8">
+              {/* Exemplo 1 */}
+              <div className="mb-8 bg-orange-100 border-2 border-orange-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-orange-800 mb-4">🔹 Exemplo 1</h3>
+                <div className="flex items-center gap-4 mb-4">
+                  <p className="text-orange-700">I drink juice. (like)</p>
+                  <p className="text-orange-700 font-bold">➡ I like to drink juice.</p>
                 </div>
-              ))}
+                
+                <h4 className="text-lg font-bold text-gray-800 mb-4">1. Transforme as frases (like / want)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {listenItems.map((item) => (
+                    <div key={item.key} className="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-orange-200">
+                      <div className="w-[180px] h-[180px] relative mb-4">
+                        <Image 
+                          src={item.image} 
+                          alt={item.label} 
+                          fill
+                          className="rounded-lg object-cover border-2 border-orange-300"
+                        />
+                      </div>
+
+                      <div className="w-full mb-2">
+                        <p className="text-sm font-medium text-gray-700 mb-2">{item.originalSentence}</p>
+                        <textarea
+                          placeholder="Escreva aqui a frase transformada..."
+                          value={notes[item.key] || ""}
+                          onChange={(e) => handleChange(item.key, e.target.value)}
+                          className="w-full h-[60px] resize-none p-3 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="flex gap-3 w-full">
+                        <button
+                          onClick={() => handleCheck(item.key)}
+                          className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition font-medium"
+                        >
+                          Verificar
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleChange(item.key, "");
+                            setShowAnswers(prev => ({ ...prev, [item.key]: false }));
+                          }}
+                          className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                        >
+                          Limpar
+                        </button>
+                      </div>
+
+                      {showAnswers[item.key] && (
+                        <div className="mt-3 w-full p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-sm text-green-700">
+                            ✅ <span className="font-medium">Resposta correta:</span> {item.correctAnswer}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Exemplo 2 - FRASES NEGATIVAS */}
+              <div className="bg-orange-100 border-2 border-orange-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-orange-800 mb-4">🔹 Exemplo 2 - Frases Negativas</h3>
+                <div className="flex items-center gap-4 mb-4">
+                  <p className="text-orange-700">I want granola.</p>
+                  <p className="text-orange-700 font-bold">➡ I don't want granola.</p>
+                </div>
+                
+                <h4 className="text-lg font-bold text-gray-800 mb-4">2. Transforme as frases em negativas (don't want)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {example2Items.map((item) => (
+                    <div key={item.key} className="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-orange-200">
+                      <div className="w-[180px] h-[180px] relative mb-4">
+                        <Image 
+                          src={item.image} 
+                          alt={item.label} 
+                          fill
+                          className="rounded-lg object-cover border-2 border-orange-300"
+                        />
+                      </div>
+
+                      <div className="w-full mb-2">
+                        <p className="text-sm font-medium text-gray-700 mb-2">{item.originalSentence}</p>
+                        <textarea
+                          placeholder="Escreva aqui a frase negativa..."
+                          value={notes2[item.key] || ""}
+                          onChange={(e) => handleChange(item.key, e.target.value, true)}
+                          className="w-full h-[60px] resize-none p-3 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div className="flex gap-3 w-full">
+                        <button
+                          onClick={() => handleCheck(item.key, true)}
+                          className="flex-1 bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition font-medium"
+                        >
+                          Verificar
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleChange(item.key, "", true);
+                            setShowAnswers2(prev => ({ ...prev, [item.key]: false }));
+                          }}
+                          className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                        >
+                          Limpar
+                        </button>
+                      </div>
+
+                      {showAnswers2[item.key] && (
+                        <div className="mt-3 w-full p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-sm text-green-700">
+                            ✅ <span className="font-medium">Resposta correta:</span> {item.correctAnswer}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prática com campos de digitação */}
+              <div className="mt-8 bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-blue-800 mb-4">🏋️ Prática para você fazer</h4>
+                <p className="text-blue-700 mb-4">Complete as frases substituindo as palavras para praticar:</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {practiceExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-blue-200">
+                      <p className="font-medium text-blue-700 mb-2">{exercise.sentence}</p>
+                      <textarea
+                        placeholder="Digite sua frase completa aqui..."
+                        value={practiceAnswers[exercise.key] || ""}
+                        onChange={(e) => handlePracticeChange(exercise.key, e.target.value)}
+                        className="w-full h-[60px] resize-none p-2 border border-blue-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handlePracticeCheck(exercise.key, exercise.answer)}
+                          className="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 transition text-sm"
+                        >
+                          Verificar
+                        </button>
+                        <button
+                          onClick={() => handlePracticeChange(exercise.key, "")}
+                          className="bg-gray-200 text-gray-700 py-1 px-3 rounded-md hover:bg-gray-300 transition text-sm"
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                      
+                      {showPracticeAnswers[exercise.key] && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-xs text-green-700">
+                            ✅ <span className="font-medium">Exemplo:</span> {exercise.answer}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 bg-green-50 p-3 rounded-lg border border-green-200">
+                  <h5 className="font-bold text-green-800 mb-2">💡 Dica:</h5>
+                  <p className="text-xs text-green-700">
+                    Lembre-se de usar "like to" para gostar de fazer algo e "want to" para querer fazer algo.
+                    Exemplo: "I drink tea" + (like) → "I like to drink tea."
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* SPEAK RIGHT NOW */}
-        <div className="bg-red-50 border-2 border-red-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-red-500 text-white py-4 px-8 flex items-center justify-between">
+        {/* UNDERSTAND GRAMMAR */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-green-500 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
-              <h2 className="text-2xl font-bold">SPEAK RIGHT NOW</h2>
+              <h2 className="text-2xl font-bold">📚 UNDERSTAND GRAMMAR</h2>
               <button 
-                onClick={() => toggleSection('speak')}
-                className="ml-4 p-2 rounded-full hover:bg-red-600 transition"
+                onClick={() => toggleSection('grammar')}
+                className="ml-4 p-2 rounded-full hover:bg-green-600 transition"
               >
-                {sections.speak ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                {sections.grammar ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
               </button>
             </div>
           </div>
 
-          {sections.speak && (
+          {sections.grammar && (
             <div className="p-8">
-              <div className="mb-6 p-4 rounded-xl bg-white shadow">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg">— I eat bread and ham. And you?</p>
-                    <AudioPlayer src="/audios/I_eat_bread_and_ham.and_you.mp3" compact />
+              <div className="bg-green-100 border-2 border-green-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">👉 Como usar dois verbos juntos de forma natural</h3>
+                
+                <div className="space-y-6">
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="text-lg font-bold text-green-700 mb-3">🔹 LIKE TO + Verbo</h4>
+                    <p className="text-gray-700 mb-3">Quando você quer dizer que <strong>gosta de fazer</strong> algo:</p>
+                    <div className="bg-green-50 p-3 rounded-md flex justify-between items-center">
+                      <div>
+                        <p className="text-green-700 font-medium">I like to drink coffee.</p>
+                        <p className="text-green-600 text-sm">(Eu gosto de beber café)</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-like-to-drink-coffee.mp3" />
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-md mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-green-700 font-medium">She likes to eat pizza.</p>
+                        <p className="text-green-600 text-sm">(Ela gosta de comer pizza)</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/she-likes-to-eat-pizza.mp3" />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg">— I eat bread and cheese.</p>
-                    <AudioPlayer src="/audios/I_eat_bread_and_cheese.mp3" compact />
+
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="text-lg font-bold text-green-700 mb-3">🔹 WANT TO + Verbo</h4>
+                    <p className="text-gray-700 mb-3">Quando você quer dizer que <strong>quer fazer</strong> algo:</p>
+                    <div className="bg-green-50 p-3 rounded-md flex justify-between items-center">
+                      <div>
+                        <p className="text-green-700 font-medium">I want to eat breakfast.</p>
+                        <p className="text-green-600 text-sm">(Eu quero comer café da manhã)</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-want-to-eat-breakfast.mp3" />
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-md mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-green-700 font-medium">They want to drink juice.</p>
+                        <p className="text-green-600 text-sm">(Eles querem beber suco)</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/they-want-to-drink-juice.mp3" />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <h4 className="text-lg font-bold text-green-700 mb-3">🔹 Na fala rápida</h4>
+                    <p className="text-gray-700 mb-3">As pessoas geralmente falam de forma mais rápida e natural:</p>
+                    <div className="bg-yellow-50 p-3 rounded-md flex justify-between items-center">
+                      <div>
+                        <p className="text-yellow-700 font-medium">I want to → I wanna</p>
+                        <p className="text-yellow-600 text-sm">I want to eat → I wanna eat</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-wanna-eat.mp3" />
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded-md mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-yellow-700 font-medium">I don't want to → I don't wanna</p>
+                        <p className="text-yellow-600 text-sm">I don't want to drink → I don't wanna drink</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-dont-wanna-drink.mp3" />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4">
+                    <h4 className="text-lg font-bold text-blue-800 mb-3">🎯 Pratique agora:</h4>
+                    <div className="space-y-4">
+                      {grammarExercises.map((exercise) => (
+                        <div key={exercise.key} className="bg-white p-3 rounded-lg border border-blue-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="font-medium text-blue-700">{exercise.sentence}</p>
+                            <SimpleAudioPlayer src={exercise.audio} />
+                          </div>
+                          <textarea
+                            placeholder="Digite sua resposta aqui..."
+                            value={grammarAnswers[exercise.key] || ""}
+                            onChange={(e) => handleGrammarChange(exercise.key, e.target.value)}
+                            className="w-full h-[50px] resize-none p-2 border border-blue-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => handleGrammarCheck(exercise.key, exercise.correctAnswer)}
+                              className="bg-blue-500 text-white py-1 px-3 rounded-md hover:bg-blue-600 transition text-sm"
+                            >
+                              Verificar
+                            </button>
+                            <button
+                              onClick={() => handleGrammarChange(exercise.key, "")}
+                              className="bg-gray-200 text-gray-700 py-1 px-3 rounded-md hover:bg-gray-300 transition text-sm"
+                            >
+                              Limpar
+                            </button>
+                          </div>
+                          
+                          {showGrammarAnswers[exercise.key] && (
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                              <p className="text-xs text-green-700">
+                                ✅ <span className="font-medium">Resposta correta:</span> {exercise.correctAnswer}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
 
-              <div className="mb-6 p-4 rounded-xl bg-white shadow">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg">— I eat bread and I drink milk. And you?</p>
-                    <AudioPlayer src="/audios/I_eat_bread_and_i_drink_milk.and_you.mp3" compact />
+        {/* SPEAKING PRACTICE */}
+        <div className="bg-red-50 border-2 border-red-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-red-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🗣️ SPEAKING PRACTICE</h2>
+              <button 
+                onClick={() => toggleSection('speaking')}
+                className="ml-4 p-2 rounded-full hover:bg-red-600 transition"
+              >
+                {sections.speaking ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.speaking && (
+            <div className="p-8">
+              <div className="mb-8 bg-red-100 border-2 border-red-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-red-800 mb-4">👉 O objetivo aqui é repetir e substituir palavras para praticar vocabulário e fluência.</h3>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-800 mb-3">Parte A – Estrutura "I like to..."</h4>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I like to drink coffee.</p>
+                        <p className="text-gray-600 text-sm">➡ troque coffee por: tea / milk / orange juice / lemonade</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-like-to-drink-coffee.mp3" />
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I like to eat cereal and honey.</p>
+                        <p className="text-gray-600 text-sm">➡ troque cereal and honey por: bread and butter / eggs / pancakes / fruit</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-like-to-eat-cereal-and-honey.mp3" />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg">— I eat crackers and I drink juice.</p>
-                    <AudioPlayer src="/audios/ieatcrackersandidrinkjuice.mp3" compact />
+
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-800 mb-3">Parte B – Estrutura "I want to..."</h4>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I want to eat bread and butter for breakfast.</p>
+                        <p className="text-gray-600 text-sm">➡ troque bread and butter por: chocolate / eggs / a sandwich / pizza</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-want-to-eat-bread-and-butter-for-breakfast.mp3" />
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I want to drink orange juice.</p>
+                        <p className="text-gray-600 text-sm">➡ troque orange juice por: water / apple tea / coffee with milk / hot chocolate</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-want-to-drink-orange-juice.mp3" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-800 mb-3">Parte C – Frases Negativas</h4>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I don't want to eat eggs.</p>
+                        <p className="text-gray-600 text-sm">➡ troque eggs por: cereal / pizza / chocolate / bread</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-dont-want-to-eat-eggs.mp3" />
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-red-200 mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-700 mb-2">I don't like to drink coffee.</p>
+                        <p className="text-gray-600 text-sm">➡ troque coffee por: tea / milk / juice / water</p>
+                      </div>
+                      <SimpleAudioPlayer src="/audios/i-dont-like-to-drink-coffee.mp3" />
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-red-700 mb-4">Vocabulary Options:</h3>
+                <h3 className="text-xl font-bold text-red-800 mb-4">Vocabulary Practice:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   {[
-                    "bread", "crackers", "pancakes", "cheese", "ham",
-                    "juice", "water", "milk", "tea", "coffee"
+                    "coffee", "tea", "milk", "juice", "water",
+                    "bread", "butter", "cereal", "pancakes", "fruit",
+                    "chocolate", "eggs", "sandwich", "pizza", "honey"
                   ].map((item) => (
                     <div key={item} className="relative group">
                       <button
@@ -572,323 +788,123 @@ export default function LessonFoodAndDrink() {
           )}
         </div>
 
-        {/* BUILD YOUR OWN STORY */}
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
-          <div className="bg-yellow-500 text-white py-4 px-8 flex items-center justify-between">
-            <div className="flex items-center">
-              <h2 className="text-2xl font-bold">🟨 BUILD YOUR OWN STORY</h2>
-              <button 
-                onClick={() => toggleSection('story')}
-                className="ml-4 p-2 rounded-full hover:bg-yellow-600 transition"
-              >
-                {sections.story ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-              </button>
-            </div>
-          </div>
-
-          {sections.story && (
-            <div className="p-8">
-              <div className="mb-6 flex justify-center">
-                <Image 
-                  src="/images/l1_buildastory.png" 
-                  alt="Cena de restaurante" 
-                  width={600}
-                  height={400}
-                  className="rounded-xl border-2 border-yellow-300"
-                />
-              </div>
-
-              <div className="space-y-3">
-                {dialogues.map((dialogue, index) => (
-                  <div 
-                    key={index} 
-                    className={`p-3 rounded-xl shadow-md ${
-                      index % 2 === 0 
-                        ? "bg-blue-50 border-2 border-blue-200" 
-                        : "bg-green-50 border-2 border-green-200"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                      <div className="flex-1 min-w-[120px]">
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">
-                          Nome do Personagem:
-                        </label>
-                        <input
-                          value={dialogue.speaker}
-                          onChange={(e) => handleDialogueSpeakerChange(index, e.target.value)}
-                          className="w-full p-2 border rounded-md font-bold bg-white text-sm"
-                          placeholder="Digite o nome"
-                        />
-                      </div>
-                    </div>
-                    
-                    {dialogue.fixed ? (
-                      <p className="text-gray-700 mt-2 text-sm">{dialogue.text}</p>
-                    ) : (
-                      <textarea
-                        value={dialogue.text}
-                        onChange={(e) => handleDialogueTextChange(index, e.target.value)}
-                        placeholder={`Escreva a fala do ${dialogue.speaker || 'personagem'}...`}
-                        className="w-full h-14 p-2 border rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent mt-2 text-sm"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 bg-yellow-100 border-2 border-yellow-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-yellow-800 mb-4">Dicas para sua história:</h3>
-                <ul className="list-disc pl-5 space-y-2 text-yellow-700 text-sm">
-                  <li>Sinta-se livre para usar o tradutor ou ChatGPT para auxiliar no exercício.</li>
-                  <li>Inclua alimentos e bebidas que você aprendeu nesta lição</li>
-                  <li>Tente fazer perguntas como "And you?" para continuar a conversa</li>
-                  <li>Use "I eat..." para comidas e "I drink..." para bebidas</li>
-                  <li>Sequência sugerida: Pedido → Pergunta sobre acompanhamentos → Resposta → Confirmação</li>
-                </ul>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button 
-                  onClick={saveStory}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
-                >
-                  Salvar Minha História
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* NEGATIVE SENTENCES DRILLS (CORRIGIDO) */}
-        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+        {/* IMPROVE YOUR PRONUNCIATION */}
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden">
           <div className="bg-purple-600 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
-              <h2 className="text-2xl font-bold">🧠 NEGATIVE SENTENCES DRILLS</h2>
+              <h2 className="text-2xl font-bold">🎙️ IMPROVE YOUR PRONUNCIATION</h2>
               <button 
-                onClick={() => toggleSection('negative')}
+                onClick={() => toggleSection('pronunciation')}
                 className="ml-4 p-2 rounded-full hover:bg-purple-700 transition"
               >
-                {sections.negative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                {sections.pronunciation ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
               </button>
             </div>
           </div>
 
-          {sections.negative && (
+          {sections.pronunciation && (
             <div className="p-8">
-              <p className="text-purple-700 mb-6 italic">
-                Pratique a construção de frases negativas usando "don't" e "doesn't". 
-                Arraste as palavras corretas para completar as frases.
-              </p>
-              
               <div className="mb-6 bg-purple-100 border-2 border-purple-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-purple-800 mb-4">Regras de uso:</h3>
-                <ul className="list-disc pl-5 space-y-2 text-purple-700 text-sm">
-                  <li><strong>Don't</strong> = Do not (usado com I, you, we, they)</li>
-                  <li><strong>Doesn't</strong> = Does not (usado com he, she, it)</li>
-                  <li>Com doesn't, o verbo principal fica na forma base, sem "s"</li>
-                  <li>Exemplo: She <span className="font-bold">doesn't eat</span> (não "doesn't eats")</li>
-                </ul>
-              </div>
-              
-              {mobileSelectedOption && (
-                <div className="mb-4 p-3 bg-purple-200 rounded-lg flex items-center justify-between">
-                  <span className="font-medium text-purple-800">Selecionado: {mobileSelectedOption}</span>
-                  <button 
-                    onClick={() => setMobileSelectedOption(null)}
-                    className="p-1 bg-purple-500 text-white rounded-full"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Opções para arrastar */}
-                <div className="bg-white p-4 rounded-xl border-2 border-purple-300">
-                  <h3 className="text-lg font-bold text-purple-700 mb-3">Opções:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {["don't", "do not", "doesn't", "does not"]
-                      .filter(option => !usedOptions.has(option))
-                      .map((option, idx) => (
-                        <div
-                          key={`option-${idx}`}
-                          className={`px-4 py-2 bg-purple-200 text-purple-800 rounded-lg cursor-move transition-all ${
-                            draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
-                          }`}
-                          draggable
-                          onDragStart={() => handleDragStart(0, option)}
-                          onDragEnd={handleDragEnd}
-                          onClick={() => handleMobileSelect(option)}
-                        >
-                          {option}
-                        </div>
-                      ))}
+                <h3 className="text-xl font-bold text-purple-800 mb-4">👉 Foque na pronúncia das palavras e expressões. Repita em voz alta:</h3>
+                
+                <div className="space-y-6">
+                  {/* Like to eat */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-lg font-bold text-purple-700">🔹 like to eat</h4>
+                      <AudioPlayer src="/audios/like-to-eat.mp3" compact />
+                    </div>
+                    <div className="flex items-center justify-between bg-purple-50 p-3 rounded-md">
+                      <p className="text-gray-700 font-medium">I like to eat.</p>
+                      <AudioPlayer src="/audios/i-like-to-eat.mp3" compact />
+                    </div>
+                  </div>
+
+                  {/* A piece of bread */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-lg font-bold text-purple-700">🔹 a piece of bread</h4>
+                      <AudioPlayer src="/audios/a-piece-of-bread.mp3" compact />
+                    </div>
+                    <div className="flex items-center justify-between bg-purple-50 p-3 rounded-md">
+                      <p className="text-gray-700 font-medium">I want a piece of bread.</p>
+                      <AudioPlayer src="/audios/i-want-a-piece-of-bread.mp3" compact />
+                    </div>
+                  </div>
+
+                  {/* Orange juice */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-lg font-bold text-purple-700">🔹 orange juice</h4>
+                      <AudioPlayer src="/audios/orange-juice.mp3" compact />
+                    </div>
+                    <div className="flex items-center justify-between bg-purple-50 p-3 rounded-md">
+                      <p className="text-gray-700 font-medium">I want orange juice.</p>
+                      <AudioPlayer src="/audios/i-want-orange-juice.mp3" compact />
+                    </div>
+                  </div>
+
+                  {/* Apple pie */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-lg font-bold text-purple-700">🔹 apple pie</h4>
+                      <AudioPlayer src="/audios/apple-pie.mp3" compact />
+                    </div>
+                    <div className="flex items-center justify-between bg-purple-50 p-3 rounded-md">
+                      <p className="text-gray-700 font-medium">I like apple pie.</p>
+                      <AudioPlayer src="/audios/i-like-apple-pie.mp3" compact />
+                    </div>
                   </div>
                 </div>
-                
-                {/* Frases para completar */}
-                <div className="space-y-4">
-                  {dragExercises
-                    .filter(ex => ex.id <= 4)
-                    .map((exercise) => (
-                      <div 
-                        key={exercise.id}
-                        className="p-4 bg-white rounded-xl border border-purple-200 shadow-sm"
-                        onDragOver={handleDragOver}
-                        onDrop={() => handleDrop(exercise.id)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-lg font-medium text-gray-800">
-                            {renderSentence(exercise)}
-                          </p>
-                          {exercise.userAnswer && (
-                            <button 
-                              onClick={() => resetDragExercise(exercise.id)}
-                              className="text-sm text-purple-600 hover:text-purple-800"
-                            >
-                              Redefinir
-                            </button>
-                          )}
-                        </div>
-                        <div className="mt-2 text-sm text-gray-500">
-                          {exercise.userAnswer && (
-                            <span>
-                              {exercise.correctAnswers.includes(exercise.userAnswer) ? (
-                                <span className="text-green-600">✅ Correto!</span>
-                              ) : (
-                                <span className="text-red-600">❌ Respostas corretas: {exercise.correctAnswers.join(' ou ')}</span>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  }
+
+                {/* Dicas de Pronúncia */}
+                <div className="mt-6 bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4">
+                  <h4 className="text-lg font-bold text-yellow-800 mb-3">💡 Dicas para esta seção:</h4>
+                  <ul className="space-y-2 text-yellow-700 text-sm">
+                    <li>• <strong>"like to"</strong> - Na fala rápida, soa como "laik tə"</li>
+                    <li>• <strong>"a piece of"</strong> - "of" quase desaparece, soando como "ə piːs ə"</li>
+                    <li>• <strong>"orange juice"</strong> - Pratique o "j" forte em "juice"</li>
+                    <li>• <strong>"apple pie"</strong> - Atenção ao "a" curto em "apple" e "i" longo em "pie"</li>
+                    <li>• Repita cada frase várias vezes até soar natural</li>
+                  </ul>
+                </div>
+
+                {/* Prática Adicional */}
+                <div className="mt-6 bg-green-50 border-2 border-green-300 rounded-xl p-4">
+                  <h4 className="text-lg font-bold text-green-800 mb-3">🏋️ Prática Extra:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-lg border border-green-200">
+                      <p className="font-medium text-green-700">I like to eat apple pie.</p>
+                      <AudioPlayer src="/audios/i-like-to-eat-apple-pie.mp3" compact />
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-200">
+                      <p className="font-medium text-green-700">I want a piece of bread.</p>
+                      <AudioPlayer src="/audios/i-want-a-piece-of-bread.mp3" compact />
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-200">
+                      <p className="font-medium text-green-700">I like orange juice.</p>
+                      <AudioPlayer src="/audios/i-like-orange-juice.mp3" compact />
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-green-200">
+                      <p className="font-medium text-green-700">I want to eat.</p>
+                      <AudioPlayer src="/audios/i-want-to-eat.mp3" compact />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* PRONOUN PRACTICE DRILLS */}
-        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden">
-          <div className="bg-indigo-600 text-white py-4 px-8 flex items-center justify-between">
-            <div className="flex items-center">
-              <h2 className="text-2xl font-bold">💬 PRONOUN PRACTICE DRILLS</h2>
-              <button 
-                onClick={() => toggleSection('pronoun')}
-                className="ml-4 p-2 rounded-full hover:bg-indigo-700 transition"
-              >
-                {sections.pronoun ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-              </button>
-            </div>
-          </div>
-
-          {sections.pronoun && (
-            <div className="p-8">
-              <p className="text-indigo-700 mb-6 italic">
-                Pratique o uso de pronomes (he, she, it) com verbos no presente simples. 
-                Arraste as formas verbais corretas para completar as frases.
-              </p>
-              
-              <div className="mb-6 bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-indigo-800 mb-4">Regras de uso:</h3>
-                <ul className="list-disc pl-5 space-y-2 text-indigo-700 text-sm">
-                  <li><strong>He/She/It</strong> = Requerem verbo com "s" no final no presente simples</li>
-                  <li>Exemplo: He <span className="font-bold">drinks</span>, she <span className="font-bold">eats</span>, it <span className="font-bold">tastes</span></li>
-                  <li>Exceções: Verbos terminados em -ss, -sh, -ch, -x, -o → adicionam "es"</li>
-                  <li>Exemplo: She <span className="font-bold">goes</span>, he <span className="font-bold">watches</span></li>
-                </ul>
-              </div>
-              
-              {mobileSelectedOption && (
-                <div className="mb-4 p-3 bg-indigo-200 rounded-lg flex items-center justify-between">
-                  <span className="font-medium text-indigo-800">Selecionado: {mobileSelectedOption}</span>
-                  <button 
-                    onClick={() => setMobileSelectedOption(null)}
-                    className="p-1 bg-indigo-500 text-white rounded-full"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Opções para arrastar */}
-                <div className="bg-white p-4 rounded-xl border-2 border-indigo-300">
-                  <h3 className="text-lg font-bold text-indigo-700 mb-3">Opções:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {["drinks", "eats", "prefers", "loves", "enjoys", "has", "likes", "wants"]
-                      .filter(option => !usedOptions.has(option))
-                      .map((option, idx) => (
-                        <div
-                          key={`option-${idx}`}
-                          className={`px-4 py-2 bg-indigo-200 text-indigo-800 rounded-lg cursor-move transition-all ${
-                            draggedItem?.option === option ? 'opacity-50 scale-95 shadow-lg' : 'opacity-100'
-                          }`}
-                          draggable
-                          onDragStart={() => handleDragStart(0, option)}
-                          onDragEnd={handleDragEnd}
-                          onClick={() => handleMobileSelect(option)}
-                        >
-                          {option}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-                
-                {/* Frases para completar */}
-                <div className="space-y-4">
-                  {dragExercises
-                    .filter(ex => ex.id > 4)
-                    .map((exercise) => (
-                      <div 
-                        key={exercise.id}
-                        className="p-4 bg-white rounded-xl border border-indigo-200 shadow-sm"
-                        onDragOver={handleDragOver}
-                        onDrop={() => handleDrop(exercise.id)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-lg font-medium text-gray-800">
-                            {renderSentence(exercise)}
-                          </p>
-                          {exercise.userAnswer && (
-                            <button 
-                              onClick={() => resetDragExercise(exercise.id)}
-                              className="text-sm text-indigo-600 hover:text-indigo-800"
-                            >
-                              Redefinir
-                            </button>
-                          )}
-                        </div>
-                        <div className="mt-2 text-sm text-gray-500">
-                          {exercise.userAnswer && (
-                            <span>
-                              {exercise.correctAnswers.includes(exercise.userAnswer) ? (
-                                <span className="text-green-600">✅ Correto!</span>
-                              ) : (
-                                <span className="text-red-600">❌ Respostas possíveis: {exercise.correctAnswers.join(', ')}</span>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-                <div className="flex justify-center gap-4 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
-            onClick={() => router.push("https://website-english-course.vercel.app/cursos/lesson1")}
+            onClick={() => router.push("https://website-english-course.vercel.app/cursos/lesson3")}
             className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
           >
             &larr; Lição Anterior
           </button>
           <button
-            onClick={() => router.push("/cursos/lesson3")}
+            onClick={() => router.push("/cursos/lesson5")}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
           >
             Próxima Lição &rarr;
@@ -896,7 +912,5 @@ export default function LessonFoodAndDrink() {
         </div>
       </div>
     </div>
-
-    
   );
 }
