@@ -159,17 +159,59 @@ interface DragExercise {
   userAnswer: string | null;
 }
 
+interface VideoQuestion {
+  id: number;
+  question: string;
+  correctAnswer: string;
+  userAnswer: string;
+  vocabulary?: { english: string; portuguese: string }[];
+}
+
 export default function LessonFoodAndDrink() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [showAnswers, setShowAnswers] = useState<Record<string, boolean>>({});
-  const [dialogues, setDialogues] = useState([
-    { speaker: "waiter", text: "May I take your order?", fixed: true },
-    { speaker: "customer", text: "", fixed: false },
-    { speaker: "waiter", text: "", fixed: false },
-    { speaker: "customer", text: "", fixed: false },
-    { speaker: "waiter", text: "", fixed: false }
+  const [videoQuestions, setVideoQuestions] = useState<VideoQuestion[]>([
+    {
+      id: 1,
+      question: "What are the tips to make English more fun?",
+      correctAnswer: "You can read interesting books, watch interesting content, and talk with people online.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "brush your teeth", portuguese: "escovar os dentes" },
+        { english: "brush your hair", portuguese: "escovar o cabelo" },
+        { english: "whenever", portuguese: "sempre que" },
+        { english: "it takes time", portuguese: "leva tempo" },
+        { english: "it takes effort", portuguese: "requer esforço" }
+      ]
+    },
+    {
+      id: 2,
+      question: "How can meet friends help you with your English?",
+      correctAnswer: "You won't feel shy, and you can use websites like MeetUp to find new friends.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "when you learn another language", portuguese: "quando você aprende outro idioma" },
+        { english: "you can meet new people", portuguese: "você pode conhecer novas pessoas" },
+        { english: "talk to people around the world", portuguese: "conversar com pessoas ao redor do mundo" },
+        { english: "You can talk to people around the world", portuguese: "Você pode conversar com pessoas ao redor do mundo" }
+      ]
+    },
+    {
+      id: 3,
+      question: "What are the things you can do on a rainy day?",
+      correctAnswer: "You can visit friends, watch movies, or go for a quiet drive.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Maybe you feel shy or scared", portuguese: "Talvez você se sinta tímido ou assustado" },
+        { english: "You feel more confident", portuguese: "Você se sente mais confiante" },
+        { english: "To improve, you need to make mistakes", portuguese: "Para melhorar, você precisa cometer erros" },
+        { english: "I drive slowly", portuguese: "Eu dirijo devagar" },
+        { english: "There many nice things you can do", portuguese: "Há muitas coisas legais que você pode fazer" },
+        { english: "rainy day", portuguese: "dia chuvoso" }
+      ]
+    }
   ]);
   const [dragExercises, setDragExercises] = useState<DragExercise[]>([]);
   const [draggedItem, setDraggedItem] = useState<{ id: number; option: string } | null>(null);
@@ -181,9 +223,9 @@ export default function LessonFoodAndDrink() {
   const [sections, setSections] = useState({
     listen: true,
     speak: true,
-    story: true,
     negative: true,
-    pronoun: true
+    pronoun: true,
+    tuneIn: true
   });
 
   // Exercícios de arrastar e soltar para negativas (CORRIGIDOS)
@@ -264,11 +306,11 @@ export default function LessonFoodAndDrink() {
         }
         setNotes(newNotes);
         
-        // Carregar história salva
-        const storyRef = doc(db, "userStories", `${user.uid}_lesson2`);
-        const storySnap = await getDoc(storyRef);
-        if (storySnap.exists() && storySnap.data().dialogues) {
-          setDialogues(storySnap.data().dialogues);
+        // Carregar respostas do vídeo salvas
+        const videoRef = doc(db, "userVideoAnswers", `${user.uid}_lesson2`);
+        const videoSnap = await getDoc(videoRef);
+        if (videoSnap.exists() && videoSnap.data().questions) {
+          setVideoQuestions(videoSnap.data().questions);
         }
       }
     });
@@ -287,29 +329,33 @@ export default function LessonFoodAndDrink() {
     setShowAnswers((prev) => ({ ...prev, [key]: true }));
     
     if (userId) {
-      const ref = doc(db, "userNotes", `${userId}_${key}`);
+      const ref = doc(db, "userNotes", `${userId}_${item.key}`);
       setDoc(ref, { text: notes[key] }, { merge: true })
         .catch(error => console.error("Error saving note: ", error));
     }
   };
 
-  const handleDialogueTextChange = (index: number, value: string) => {
-    const newDialogues = [...dialogues];
-    newDialogues[index] = { ...newDialogues[index], text: value };
-    setDialogues(newDialogues);
+  const handleVideoAnswerChange = (id: number, value: string) => {
+    setVideoQuestions(prev => 
+      prev.map(question => 
+        question.id === id ? { ...question, userAnswer: value } : question
+      )
+    );
   };
 
-  const handleDialogueSpeakerChange = (index: number, value: string) => {
-    const newDialogues = [...dialogues];
-    newDialogues[index] = { ...newDialogues[index], speaker: value };
-    setDialogues(newDialogues);
-  };
-
-  const saveStory = async () => {
+  const saveVideoAnswers = async () => {
     if (userId) {
-      const ref = doc(db, "userStories", `${userId}_lesson2`);
-      await setDoc(ref, { dialogues });
-      alert("História salva com sucesso!");
+      const ref = doc(db, "userVideoAnswers", `${userId}_lesson2`);
+      await setDoc(ref, { questions: videoQuestions });
+      alert("Respostas salvas com sucesso!");
+    }
+  };
+
+  const checkVideoAnswer = (id: number) => {
+    const question = videoQuestions.find(q => q.id === id);
+    if (question) {
+      const isCorrect = question.userAnswer.toLowerCase().includes(question.correctAnswer.toLowerCase());
+      alert(isCorrect ? '✅ Resposta correta!' : `❌ Resposta esperada: ${question.correctAnswer}`);
     }
   };
 
@@ -572,93 +618,6 @@ export default function LessonFoodAndDrink() {
           )}
         </div>
 
-        {/* BUILD YOUR OWN STORY */}
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
-          <div className="bg-yellow-500 text-white py-4 px-8 flex items-center justify-between">
-            <div className="flex items-center">
-              <h2 className="text-2xl font-bold">🟨 BUILD YOUR OWN STORY</h2>
-              <button 
-                onClick={() => toggleSection('story')}
-                className="ml-4 p-2 rounded-full hover:bg-yellow-600 transition"
-              >
-                {sections.story ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-              </button>
-            </div>
-          </div>
-
-          {sections.story && (
-            <div className="p-8">
-              <div className="mb-6 flex justify-center">
-                <Image 
-                  src="/images/l1_buildastory.png" 
-                  alt="Cena de restaurante" 
-                  width={600}
-                  height={400}
-                  className="rounded-xl border-2 border-yellow-300"
-                />
-              </div>
-
-              <div className="space-y-3">
-                {dialogues.map((dialogue, index) => (
-                  <div 
-                    key={index} 
-                    className={`p-3 rounded-xl shadow-md ${
-                      index % 2 === 0 
-                        ? "bg-blue-50 border-2 border-blue-200" 
-                        : "bg-green-50 border-2 border-green-200"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                      <div className="flex-1 min-w-[120px]">
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">
-                          Nome do Personagem:
-                        </label>
-                        <input
-                          value={dialogue.speaker}
-                          onChange={(e) => handleDialogueSpeakerChange(index, e.target.value)}
-                          className="w-full p-2 border rounded-md font-bold bg-white text-sm"
-                          placeholder="Digite o nome"
-                        />
-                      </div>
-                    </div>
-                    
-                    {dialogue.fixed ? (
-                      <p className="text-gray-700 mt-2 text-sm">{dialogue.text}</p>
-                    ) : (
-                      <textarea
-                        value={dialogue.text}
-                        onChange={(e) => handleDialogueTextChange(index, e.target.value)}
-                        placeholder={`Escreva a fala do ${dialogue.speaker || 'personagem'}...`}
-                        className="w-full h-14 p-2 border rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent mt-2 text-sm"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 bg-yellow-100 border-2 border-yellow-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-yellow-800 mb-4">Dicas para sua história:</h3>
-                <ul className="list-disc pl-5 space-y-2 text-yellow-700 text-sm">
-                  <li>Sinta-se livre para usar o tradutor ou ChatGPT para auxiliar no exercício.</li>
-                  <li>Inclua alimentos e bebidas que você aprendeu nesta lição</li>
-                  <li>Tente fazer perguntas como "And you?" para continuar a conversa</li>
-                  <li>Use "I eat..." para comidas e "I drink..." para bebidas</li>
-                  <li>Sequência sugerida: Pedido → Pergunta sobre acompanhamentos → Resposta → Confirmação</li>
-                </ul>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button 
-                  onClick={saveStory}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
-                >
-                  Salvar Minha História
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* NEGATIVE SENTENCES DRILLS (CORRIGIDO) */}
         <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
           <div className="bg-purple-600 text-white py-4 px-8 flex items-center justify-between">
@@ -771,7 +730,7 @@ export default function LessonFoodAndDrink() {
         </div>
 
         {/* PRONOUN PRACTICE DRILLS */}
-        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden">
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
           <div className="bg-indigo-600 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
               <h2 className="text-2xl font-bold">💬 PRONOUN PRACTICE DRILLS</h2>
@@ -880,7 +839,168 @@ export default function LessonFoodAndDrink() {
             </div>
           )}
         </div>
-                <div className="flex justify-center gap-4 mt-8">
+
+        {/* TUNE IN YOUR EARS - NOVA SEÇÃO NO FINAL COM VÍDEO */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg overflow-hidden">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🎧 TUNE IN YOUR EARS</h2>
+              <button 
+                onClick={() => toggleSection('tuneIn')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.tuneIn ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.tuneIn && (
+            <div className="p-8">
+              <div className="mb-8 text-center">
+                <h3 className="text-2xl font-bold text-teal-700 mb-4">
+                  Watch the video and answer the questions below:
+                </h3>
+                
+                {/* Container do vídeo do YouTube */}
+                <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto max-w-4xl">
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src="https://www.youtube.com/embed/zD_KUmTl4jE"
+                      title="English Learning Tips"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-[400px] md:h-[500px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-teal-600">
+                  <p>Video: Tips for Making English Learning Fun and Effective</p>
+                </div>
+              </div>
+
+              {/* Vocabulary Help */}
+              <div className="mb-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">Key Vocabulary from the Video:</h3>
+                <div className="space-y-3 text-teal-700">
+                  <div className="flex justify-between">
+                    <span className="font-medium">brush your teeth</span>
+                    <span className="text-teal-600">- escovar os dentes</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">brush your hair</span>
+                    <span className="text-teal-600">- escovar o cabelo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">whenever</span>
+                    <span className="text-teal-600">- sempre que</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">rainy day</span>
+                    <span className="text-teal-600">- dia chuvoso</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">it takes time</span>
+                    <span className="text-teal-600">- leva tempo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">it takes effort</span>
+                    <span className="text-teal-600">- requer esforço</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">make mistakes</span>
+                    <span className="text-teal-600">- cometer erros</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">You can talk to people around the world</span>
+                    <span className="text-teal-600">- Você pode conversar com pessoas ao redor do mundo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">feel shy or scared</span>
+                    <span className="text-teal-600">- sentir-se tímido ou assustado</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">feel more confident</span>
+                    <span className="text-teal-600">- sentir-se mais confiante</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">meet new people</span>
+                    <span className="text-teal-600">- conhecer novas pessoas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions Section */}
+              <div className="space-y-6">
+                {videoQuestions.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-teal-200 shadow-md">
+                    <h4 className="text-lg font-bold text-teal-700 mb-3">
+                      {question.question}
+                    </h4>
+                    
+                    {question.vocabulary && (
+                      <div className="mb-3 p-3 bg-teal-50 rounded-lg">
+                        <p className="text-sm font-medium text-teal-600 mb-1">Vocabulary hints:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {question.vocabulary.map((word, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-teal-700 font-medium">{word.english}</span>
+                              <span className="text-teal-600">- {word.portuguese}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <textarea
+                      value={question.userAnswer}
+                      onChange={(e) => handleVideoAnswerChange(question.id, e.target.value)}
+                      placeholder="Write your answer here..."
+                      className="w-full h-24 p-3 border border-teal-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    />
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => checkVideoAnswer(question.id)}
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md transition font-medium"
+                      >
+                        Check Answer
+                      </button>
+                      <button
+                        onClick={() => handleVideoAnswerChange(question.id, "")}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">Tips for Answering:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-teal-700 text-sm">
+                  <li>Listen carefully to the main ideas in the video</li>
+                  <li>Use the vocabulary hints to help form your answers</li>
+                  <li>Write complete sentences in English</li>
+                  <li>Don't worry about perfection - the goal is to practice</li>
+                  <li>You can watch the video multiple times if needed</li>
+                </ul>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={saveVideoAnswers}
+                  className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                >
+                  Save My Answers
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-center gap-4 mt-8">
           <button
             onClick={() => router.push("https://website-english-course.vercel.app/cursos/lesson1")}
             className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
@@ -896,7 +1016,5 @@ export default function LessonFoodAndDrink() {
         </div>
       </div>
     </div>
-
-    
   );
 }

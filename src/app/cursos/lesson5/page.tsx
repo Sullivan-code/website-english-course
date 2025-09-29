@@ -37,11 +37,14 @@ export default function LessonFoodAndDrink() {
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
   };
 
+  // URL base do Google Drive para as imagens
+  const googleDriveImageUrl = "https://drive.google.com/uc?export=view&id=1ca12OQO3mVe9DmCSME50E8k_x2ewnDc2";
+
   return (
     <div
       className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
       style={{
-        backgroundImage: `url("/images/lesson5-bg.jpg")`,
+        backgroundImage: `url("/images/l5-orange-juice.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -59,11 +62,9 @@ export default function LessonFoodAndDrink() {
             Aprenda a expressar preferências sobre alimentos e bebidas em inglês. 🍖🥗
           </p>
           <div className="w-64 h-64 mx-auto">
-            <Image
-              src="/images/lesson5-bg.jpg"
+            <img
+              src={googleDriveImageUrl}
               alt="Food and drink"
-              width={256}
-              height={256}
               className="w-full h-full object-cover rounded-2xl shadow-md"
             />
           </div>
@@ -837,11 +838,10 @@ export default function LessonFoodAndDrink() {
                 <div className="lg:w-1/3 flex flex-col gap-4">
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
-                      <Image
-                        src="/images/rl-image-3.jpg"
+                      <img
+                        src={googleDriveImageUrl}
                         alt="Refeições principais"
-                        fill
-                        className="rounded-xl object-cover"
+                        className="rounded-xl object-cover w-full h-full"
                       />
                     </div>
                     <p className="text-center mt-2 text-gray-700 italic">
@@ -851,11 +851,10 @@ export default function LessonFoodAndDrink() {
                   
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
-                      <Image
-                        src="/images/rl-image-4.jpg"
+                      <img
+                        src={"googleDriveImageUrl"}
                         alt="Bebidas e sanduíches"
-                        fill
-                        className="rounded-xl object-cover"
+                        className="rounded-xl object-cover w-full h-full"
                       />
                     </div>
                     <p className="text-center mt-2 text-gray-700 italic">
@@ -941,11 +940,9 @@ export default function LessonFoodAndDrink() {
 
             {/* Coluna central - Imagem e balão */}
             <div className="bg-white flex-1 p-6 flex flex-col items-center justify-center text-xl relative">
-              <Image
-                src="/images/cio-image-2.jpg"
+              <img
+                src={googleDriveImageUrl}
                 alt="Pessoa escolhendo comida"
-                width={160}
-                height={160}
                 className="rounded-full w-40 h-40 object-cover mb-4"
               />
               <div className="bg-yellow-200 text-black px-4 py-2 rounded-xl shadow-md text-center">
@@ -1013,9 +1010,9 @@ export default function LessonFoodAndDrink() {
         </div>
 
         {/* Botão para próxima lição */}
-                        <div className="flex justify-center gap-4 mt-8">
+        <div className="flex justify-center gap-4 mt-8">
           <button
-            onClick={() => router.push("https://website-english-course.vercel.app/cursos/lesson4")}
+            onClick={() => router.push("/cursos/lesson4")}
             className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
           >
             &larr; Lição Anterior
@@ -1026,10 +1023,8 @@ export default function LessonFoodAndDrink() {
           >
             Próxima Lição &rarr;
           </button>
-        </div>
+        </div>  
       </div>
     </div>
-
-    
   );
 }
