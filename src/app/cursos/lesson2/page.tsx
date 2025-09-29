@@ -329,7 +329,7 @@ export default function LessonFoodAndDrink() {
     setShowAnswers((prev) => ({ ...prev, [key]: true }));
     
     if (userId) {
-      const ref = doc(db, "userNotes", `${userId}_${item.key}`);
+      const ref = doc(db, "userNotes", `${userId}_${key}`);
       setDoc(ref, { text: notes[key] }, { merge: true })
         .catch(error => console.error("Error saving note: ", error));
     }
