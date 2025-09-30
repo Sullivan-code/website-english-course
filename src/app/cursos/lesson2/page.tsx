@@ -885,47 +885,47 @@ export default function LessonFoodAndDrink() {
                 <div className="space-y-3 text-teal-700">
                   <div className="flex justify-between">
                     <span className="font-medium">brush your teeth</span>
-                    <span className="text-teal-600">- escovar os dentes</span>
+                    <span className="text-teal-600">escovar os dentes</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">brush your hair</span>
-                    <span className="text-teal-600">- escovar o cabelo</span>
+                    <span className="text-teal-600">escovar o cabelo</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">whenever</span>
-                    <span className="text-teal-600">- sempre que</span>
+                    <span className="text-teal-600">sempre que</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">rainy day</span>
-                    <span className="text-teal-600">- dia chuvoso</span>
+                    <span className="text-teal-600">dia chuvoso</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">it takes time</span>
-                    <span className="text-teal-600">- leva tempo</span>
+                    <span className="text-teal-600">leva tempo</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">it takes effort</span>
-                    <span className="text-teal-600">- requer esforço</span>
+                    <span className="text-teal-600"> requer esforço</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">make mistakes</span>
-                    <span className="text-teal-600">- cometer erros</span>
+                    <span className="text-teal-600">cometer erros</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">You can talk to people around the world</span>
-                    <span className="text-teal-600">- Você pode conversar com pessoas ao redor do mundo</span>
+                    <span className="text-teal-600">Você pode conversar com pessoas ao redor do mundo</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">feel shy or scared</span>
-                    <span className="text-teal-600">- sentir-se tímido ou assustado</span>
+                    <span className="text-teal-600">sentir-se tímido ou assustado</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">feel more confident</span>
-                    <span className="text-teal-600">- sentir-se mais confiante</span>
+                    <span className="text-teal-600">sentir-se mais confiante</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">meet new people</span>
-                    <span className="text-teal-600">- conhecer novas pessoas</span>
+                    <span className="text-teal-600">conhecer novas pessoas</span>
                   </div>
                 </div>
               </div>
@@ -945,7 +945,7 @@ export default function LessonFoodAndDrink() {
                           {question.vocabulary.map((word, idx) => (
                             <div key={idx} className="flex justify-between text-sm">
                               <span className="text-teal-700 font-medium">{word.english}</span>
-                              <span className="text-teal-600">- {word.portuguese}</span>
+                          
                             </div>
                           ))}
                         </div>
@@ -978,13 +978,13 @@ export default function LessonFoodAndDrink() {
               </div>
 
               <div className="mt-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-teal-800 mb-4">Tips for Answering:</h3>
+                <h3 className="text-xl font-bold text-teal-800 mb-4">Dicas para Responder:</h3>
                 <ul className="list-disc pl-5 space-y-2 text-teal-700 text-sm">
-                  <li>Listen carefully to the main ideas in the video</li>
-                  <li>Use the vocabulary hints to help form your answers</li>
-                  <li>Write complete sentences in English</li>
-                  <li>Don't worry about perfection - the goal is to practice</li>
-                  <li>You can watch the video multiple times if needed</li>
+                  <li>Ouça com atenção as ideias principais do vídeo</li>
+                  <li>Use as dicas de vocabulário para ajudar a formar suas respostas</li>
+                  <li>Escreva frases completas em inglês</li>
+                  <li>Não se preocupe com a perfeição</li>
+                  <li>Você pode assistir ao vídeo várias vezes, se necessário</li>
                 </ul>
               </div>
 

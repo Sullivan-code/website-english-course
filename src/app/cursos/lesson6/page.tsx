@@ -354,7 +354,7 @@ export default function Lesson6FoodDrink() {
   };
 
   return (
-    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/lesson1-86.jpg')` }}>
+    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/l5-orange-juice.jpg')` }}>
       <div className="max-w-6xl mx-auto bg-white bg-opacity-95 rounded-[40px] p-10 shadow-lg">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">Lesson 6 – Food & Drink</h1>

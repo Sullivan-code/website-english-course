@@ -233,6 +233,14 @@ interface DragExercise {
   userAnswer: string | null;
 }
 
+interface VideoQuestion {
+  id: number;
+  question: string;
+  correctAnswer: string;
+  userAnswer: string;
+  vocabulary?: { english: string; portuguese: string }[];
+}
+
 export default function LessonFoodAndDrink() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -250,8 +258,67 @@ export default function LessonFoodAndDrink() {
     fluency: true,
     grammar: true,
     speaking: true,
-    pronunciation: true
+    pronunciation: true,
+    tuneIn: true
   });
+
+  // Estados para as questões do vídeo - ATUALIZADAS
+  const [videoQuestions, setVideoQuestions] = useState<VideoQuestion[]>([
+    {
+      id: 1,
+      question: "Tell a little bit about the countries mentioned in this video.",
+      correctAnswer: "The video mentions countries like India, which is in South Asia, Spain, and Wales. They all have rich cultures, traditions, and beautiful places.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "also", portuguese: "também" },
+        { english: "Too", portuguese: "também" },
+        { english: "Spain", portuguese: "Espanha" },
+        { english: "South Africa", portuguese: "Africa do Sul" },
+        { english: "India", portuguese: "India" },
+        { english: "The USA", portuguese: "Os Estados Unidos" },
+
+      ]
+    },
+    {
+      id: 2,
+      question: "What is one of the most spoken languages in India?",
+      correctAnswer: "Hindi is one of the most spoken languages in India.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Cities, mountains and rivers", portuguese: "cidades, montanhas e rios" },
+        { english: "India is in South Asia", portuguese: "A Índia fica no sul da Ásia" },
+        { english: "To grow up", portuguese: "Crescer" },
+        { english: "To miss", portuguese: "Sentir saudade" },
+        { english: "To speak", portuguese: "Falar" },
+        { english: "People", portuguese: "Pessoas" },
+      ]
+    },
+    {
+      id: 3,
+      question: "Would you like to visit South Africa?",
+      correctAnswer: "On a rainy day, you can visit friends, watch movies, or go for a quiet drive.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Wonderful", portuguese: "maravilhoso(a)" },
+        { english: "A little bit", portuguese: "um pouquinho" },
+        { english: "Beaches", portuguese: "Praias" },
+        { english: "Summer", portuguese: "Verão" },
+        { english: "Great weather", portuguese: "Clima ótimo" },
+        { english: "Culture", portuguese: "Cultura" }
+      ]
+    },
+    {
+      id: 4,
+      question: "What do we need to use when it gets really hot?",
+      correctAnswer: "We need an air conditioning or a fan when it gets really hot.",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Fan", portuguese: "Ventilador" },
+        { english: "Air conditioning", portuguese: "ar-condicionado" },
+        { english: "Fresh air", portuguese: "ar fresco" },
+     ]
+    }
+  ]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -275,6 +342,13 @@ export default function LessonFoodAndDrink() {
           newNotes2[item.key] = snap.exists() ? snap.data().text : "";
         }
         setNotes2(newNotes2);
+        
+        // Carregar respostas do vídeo salvas
+        const videoRef = doc(db, "userVideoAnswers", `${user.uid}_lesson4`);
+        const videoSnap = await getDoc(videoRef);
+        if (videoSnap.exists() && videoSnap.data().questions) {
+          setVideoQuestions(videoSnap.data().questions);
+        }
       }
     });
     
@@ -295,6 +369,14 @@ export default function LessonFoodAndDrink() {
 
   const handleGrammarChange = (key: string, value: string) => {
     setGrammarAnswers((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleVideoAnswerChange = (id: number, value: string) => {
+    setVideoQuestions(prev => 
+      prev.map(question => 
+        question.id === id ? { ...question, userAnswer: value } : question
+      )
+    );
   };
 
   const handleCheck = (key: string, isExample2 = false) => {
@@ -318,6 +400,22 @@ export default function LessonFoodAndDrink() {
 
   const handleGrammarCheck = (key: string, correctAnswer: string) => {
     setShowGrammarAnswers((prev) => ({ ...prev, [key]: true }));
+  };
+
+  const saveVideoAnswers = async () => {
+    if (userId) {
+      const ref = doc(db, "userVideoAnswers", `${userId}_lesson4`);
+      await setDoc(ref, { questions: videoQuestions });
+      alert("Respostas salvas com sucesso!");
+    }
+  };
+
+  const checkVideoAnswer = (id: number) => {
+    const question = videoQuestions.find(q => q.id === id);
+    if (question) {
+      const isCorrect = question.userAnswer.toLowerCase().includes(question.correctAnswer.toLowerCase());
+      alert(isCorrect ? '✅ Resposta correta!' : `❌ Resposta esperada: ${question.correctAnswer}`);
+    }
   };
 
   // Função para alternar expansão de seções
@@ -359,7 +457,7 @@ export default function LessonFoodAndDrink() {
   ];
 
   return (
-    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/lesson1-86.jpg')` }}>
+    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/lesson3-bg.jpg')` }}>
       <div className="max-w-5xl mx-auto bg-white bg-opacity-95 rounded-[40px] p-10 shadow-lg">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">📖 Lesson 4 – Food & Drink</h1>
@@ -789,7 +887,7 @@ export default function LessonFoodAndDrink() {
         </div>
 
         {/* IMPROVE YOUR PRONUNCIATION */}
-        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden">
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
           <div className="bg-purple-600 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
               <h2 className="text-2xl font-bold">🎙️ IMPROVE YOUR PRONUNCIATION</h2>
@@ -891,6 +989,218 @@ export default function LessonFoodAndDrink() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* TUNE IN YOUR EARS - SEÇÃO COMPLETAMENTE ATUALIZADA */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🎧 TUNE IN YOUR EARS</h2>
+              <button 
+                onClick={() => toggleSection('tuneIn')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.tuneIn ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.tuneIn && (
+            <div className="p-8">
+              <div className="mb-8 text-center">
+                <h3 className="text-2xl font-bold text-teal-700 mb-4">
+                  Watch the video and answer the questions below:
+                </h3>
+                
+                {/* Container do vídeo do YouTube ATUALIZADO */}
+                <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto max-w-4xl">
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src="https://www.youtube.com/embed/w8zHZP2uZZ4"
+                      title="English Listening Practice - Countries and Cultures"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-[400px] md:h-[500px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-teal-600">
+                  <p>Video: English Listening Practice - Episode 2: Countries and Cultures</p>
+                </div>
+              </div>
+
+              {/* Vocabulary Help - ATUALIZADO */}
+              <div className="mb-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">📖 Key Vocabulary from the Video:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">It means</span>
+                      <span className="text-teal-600">Isso significa</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Wisdom</span>
+                      <span className="text-teal-600">sabedoria</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Fan</span>
+                      <span className="text-teal-600">Ventilador</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">also</span>
+                      <span className="text-teal-600">também</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">The same name</span>
+                      <span className="text-teal-600">o mesmo nome</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Too</span>
+                      <span className="text-teal-600">também</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Cities, mountains and rivers</span>
+                      <span className="text-teal-600">cidades, montanhas e rios</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">India is in South Asia</span>
+                      <span className="text-teal-600">A Índia fica no sul da Ásia</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">I grew up</span>
+                      <span className="text-teal-600">Eu cresci (Fui criado(a))</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Coastline</span>
+                      <span className="text-teal-600">litoral</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">I really miss India</span>
+                      <span className="text-teal-600">Eu sinto muita saudade da Índia</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Wonderful</span>
+                      <span className="text-teal-600">maravilhoso(a)</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">A little bit</span>
+                      <span className="text-teal-600">um pouquinho</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Air Conditioning</span>
+                      <span className="text-teal-600">Ar-condicionado</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Vocabulary */}
+              <div className="mb-8 bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 More Vocabulary About Countries:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">Blonde hair</span>
+                      <span className="text-blue-600">cabelo loiro</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">Wales</span>
+                      <span className="text-blue-600">País de Gales</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">Spain</span>
+                      <span className="text-blue-600">Espanha</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">When she smiles</span>
+                      <span className="text-blue-600">quando ela sorri</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">Air conditioning</span>
+                      <span className="text-blue-600">ar-condicionado</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-blue-700">Treadmill</span>
+                      <span className="text-blue-600">esteira</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions Section - ATUALIZADA */}
+              <div className="space-y-6 mb-8">
+                {videoQuestions.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-teal-200 shadow-md">
+                    <h4 className="text-lg font-bold text-teal-700 mb-3">
+                      {question.question}
+                    </h4>
+                    
+                    {question.vocabulary && (
+                      <div className="mb-3 p-3 bg-teal-50 rounded-lg">
+                        <p className="text-sm font-medium text-teal-600 mb-1">Vocabulary hints:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {question.vocabulary.map((word, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-teal-700 font-medium">{word.english}</span>
+                              <span className="text-teal-600">- {word.portuguese}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <textarea
+                      value={question.userAnswer}
+                      onChange={(e) => handleVideoAnswerChange(question.id, e.target.value)}
+                      placeholder="Write your answer here..."
+                      className="w-full h-24 p-3 border border-teal-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    />
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => checkVideoAnswer(question.id)}
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md transition font-medium"
+                      >
+                        Check Answer
+                      </button>
+                      <button
+                        onClick={() => handleVideoAnswerChange(question.id, "")}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Learning Tips */}
+              <div className="mt-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">💡 Tips for Better Listening:</h3>
+<ul className="list-disc pl-5 space-y-2 text-teal-700 text-sm">
+  <li><strong>Foque nas palavras-chave:</strong> Preste atenção em nomes de países, adjetivos e verbos</li>
+  <li><strong>Ouça o contexto:</strong> Tente entender o significado geral mesmo que você perca algumas palavras</li>
+  <li><strong>Use o vocabulário:</strong> As palavras fornecidas ajudarão você a entender as ideias principais</li>
+  <li><strong>Repita se necessário:</strong> Assista ao vídeo várias vezes para captar todos os detalhes</li>
+  <li><strong>Pratique a pronúncia:</strong> Repita as novas palavras e expressões em voz alta</li>
+</ul>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={saveVideoAnswers}
+                  className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                >
+                  Save My Answers
+                </button>
               </div>
             </div>
           )}
