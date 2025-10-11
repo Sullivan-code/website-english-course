@@ -9,26 +9,26 @@ import { onAuthStateChanged } from "firebase/auth";
 import { Pause, Play, RotateCcw, Volume2, ChevronDown, ChevronUp, X, Check } from "lucide-react";
 
 const listenItems = [
-  { 
-    key: "dish3", 
-    label: "Prato 3", 
-    image: "/images/fish-and-salad.png", 
+  {
+    key: "dish3",
+    label: "Prato 3",
+    image: "/images/fish-and-salad.png",
     audio: "/audios/dish3.mp3",
     description: "Fish and Salad",
     correctOrder: 3
   },
-  { 
-    key: "dish2", 
-    label: "Prato 2", 
-    image: "/images/rice-and-beans-2.png", 
+  {
+    key: "dish2",
+    label: "Prato 2",
+    image: "/images/rice-and-beans-2.png",
     audio: "/audios/dish2.mp3",
     description: "Rice and Beans",
     correctOrder: 2
   },
-  { 
-    key: "dish1", 
-    label: "Prato 1", 
-    image: "/images/chicken-sandwich.png", 
+  {
+    key: "dish1",
+    label: "Prato 1",
+    image: "/images/chicken-sandwich.png",
     audio: "/audios/dish1.mp3",
     description: "Chicken Sandwich",
     correctOrder: 1
@@ -96,7 +96,7 @@ const AudioPlayer = ({ src, compact = false }: AudioPlayerProps) => {
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current;
     if (!audio || !progressBarRef.current) return;
-    
+   
     const rect = progressBarRef.current.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const width = rect.width;
@@ -107,32 +107,32 @@ const AudioPlayer = ({ src, compact = false }: AudioPlayerProps) => {
 
   return (
     <div className={`flex items-center gap-2 ${compact ? "ml-2" : ""}`}>
-      <button 
-        onClick={togglePlayPause} 
+      <button
+        onClick={togglePlayPause}
         className={`${compact ? "p-1" : "p-2"} bg-blue-500 text-white rounded-full hover:bg-blue-600`}
       >
         {isPlaying ? <Pause size={compact ? 12 : 16} /> : <Play size={compact ? 12 : 16} />}
       </button>
-      <button 
-        onClick={resetAudio} 
+      <button
+        onClick={resetAudio}
         className={`${compact ? "p-1" : "p-2"} bg-gray-500 text-white rounded-full hover:bg-gray-600`}
       >
         <RotateCcw size={compact ? 12 : 16} />
       </button>
-      
+     
       {!compact && (
-        <div 
+        <div
           ref={progressBarRef}
           className="w-20 h-1 bg-gray-300 rounded-full overflow-hidden cursor-pointer"
           onClick={handleProgressClick}
         >
-          <div 
-            className="h-full bg-blue-500 transition-all duration-200" 
-            style={{ width: `${progress}%` }} 
+          <div
+            className="h-full bg-blue-500 transition-all duration-200"
+            style={{ width: `${progress}%` }}
           />
         </div>
       )}
-      
+     
       <audio ref={audioRef} src={src} preload="auto" />
     </div>
   );
@@ -153,6 +153,14 @@ interface NumberingAnswer {
   [key: string]: number | null;
 }
 
+interface VideoQuestion {
+  id: number;
+  question: string;
+  userAnswer: string;
+  vocabulary?: { english: string; portuguese: string }[];
+  isPersonal?: boolean;
+}
+
 export default function Lesson6FoodDrink() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -163,16 +171,16 @@ export default function Lesson6FoodDrink() {
     { speaker: "Customer", text: "", fixed: false },
     { speaker: "Waiter", text: "", fixed: false }
   ]);
-  
+ 
   const [numberingAnswers, setNumberingAnswers] = useState<NumberingAnswer>({
     dish1: null,
     dish2: null,
     dish3: null
   });
-  
+ 
   const [isNumberingChecked, setIsNumberingChecked] = useState(false);
   const [isNumberingCorrect, setIsNumberingCorrect] = useState(false);
-  
+ 
   const [practiceItems, setPracticeItems] = useState<PracticeItem[]>([
     // Substitution Practice I
     { id: 1, sentence: "I prefer sweet cookies. And you?", options: ["savory cookies", "toast"], correctAnswer: "savory cookies", userAnswer: "" },
@@ -180,7 +188,7 @@ export default function Lesson6FoodDrink() {
     { id: 3, sentence: "I prefer to drink soda.", options: ["orange juice", "apple juice"], correctAnswer: "orange juice", userAnswer: "" },
     { id: 4, sentence: "I love to eat French fries for lunch.", options: ["salad", "vegetables"], correctAnswer: "salad", userAnswer: "" },
     { id: 5, sentence: "I want to drink a cup of tea.", options: ["coffee"], correctAnswer: "coffee", userAnswer: "" },
-    
+   
     // Change into Negative
     { id: 6, sentence: "I want to eat crackers and jam.", options: [], correctAnswer: "I don't want to eat crackers and jam.", userAnswer: "", isNegative: true },
     { id: 7, sentence: "I like to eat bacon.", options: [], correctAnswer: "I don't like to eat bacon.", userAnswer: "", isNegative: true },
@@ -188,20 +196,20 @@ export default function Lesson6FoodDrink() {
     { id: 9, sentence: "I eat rice and beans for lunch.", options: [], correctAnswer: "I don't eat rice and beans for lunch.", userAnswer: "", isNegative: true },
     { id: 10, sentence: "I want to eat tomatoes.", options: [], correctAnswer: "I don't want to eat tomatoes.", userAnswer: "", isNegative: true },
     { id: 11, sentence: "I want to drink a glass of water.", options: [], correctAnswer: "I don't want to drink a glass of water.", userAnswer: "", isNegative: true },
-    
+   
     // Substitution Practice II - CORRIGIDAS
     { id: 12, sentence: "Do you drink coffee?", options: ["juice", "tea", "milk", "coke"], correctAnswer: "juice", userAnswer: "" },
     { id: 13, sentence: "Do you eat bread?", options: ["rice", "pasta", "pancakes"], correctAnswer: "rice", userAnswer: "" },
     { id: 14, sentence: "Do you like eggs?", options: ["yogurt", "soup", "salad"], correctAnswer: "yogurt", userAnswer: "" },
     { id: 15, sentence: "Do you prefer pizza?", options: ["spaghetti", "burger", "hotdog", "soup"], correctAnswer: "spaghetti", userAnswer: "" },
-    
+   
     // Substitution Practice III - Third Person (He/She)
     { id: 16, sentence: "She drinks coffee for breakfast.", options: ["tea", "milk", "juice"], correctAnswer: "tea", userAnswer: "", usesThirdPerson: true },
     { id: 17, sentence: "He eats bread with butter.", options: ["jam", "honey", "cheese"], correctAnswer: "jam", userAnswer: "", usesThirdPerson: true },
     { id: 18, sentence: "She likes to eat pizza.", options: ["pasta", "salad", "soup"], correctAnswer: "pasta", userAnswer: "", usesThirdPerson: true },
     { id: 19, sentence: "He wants to drink soda.", options: ["water", "juice", "coffee"], correctAnswer: "water", userAnswer: "", usesThirdPerson: true },
     { id: 20, sentence: "She prefers sweet cookies.", options: ["savory cookies", "cake", "pie"], correctAnswer: "savory cookies", userAnswer: "", usesThirdPerson: true },
-    
+   
     // Change into Affirmative
     { id: 21, sentence: "I don't like to eat rice.", options: [], correctAnswer: "I like to eat rice.", userAnswer: "" },
     { id: 22, sentence: "I don't like chocolate.", options: [], correctAnswer: "I like chocolate.", userAnswer: "" },
@@ -209,13 +217,13 @@ export default function Lesson6FoodDrink() {
     { id: 24, sentence: "I don't want to eat fish for dinner.", options: [], correctAnswer: "I want to eat fish for dinner.", userAnswer: "" },
     { id: 25, sentence: "I don't want to eat sausages.", options: [], correctAnswer: "I want to eat sausages.", userAnswer: "" },
     { id: 26, sentence: "I don't want to eat an egg.", options: [], correctAnswer: "I want to eat an egg.", userAnswer: "" },
-    
+   
     // Change into Affirmative - Third Person
     { id: 27, sentence: "She doesn't like coffee.", options: [], correctAnswer: "She likes coffee.", userAnswer: "", usesThirdPerson: true },
     { id: 28, sentence: "He doesn't eat meat.", options: [], correctAnswer: "He eats meat.", userAnswer: "", usesThirdPerson: true },
     { id: 29, sentence: "She doesn't want pizza.", options: [], correctAnswer: "She wants pizza.", userAnswer: "", usesThirdPerson: true },
     { id: 30, sentence: "He doesn't drink soda.", options: [], correctAnswer: "He drinks soda.", userAnswer: "", usesThirdPerson: true },
-    
+   
     // Change into Interrogative
     { id: 31, sentence: "You eat rice.", options: [], correctAnswer: "Do you eat rice?", userAnswer: "", isInterrogative: true },
     { id: 32, sentence: "You drink tea for lunch.", options: [], correctAnswer: "Do you drink tea for lunch?", userAnswer: "", isInterrogative: true },
@@ -223,13 +231,13 @@ export default function Lesson6FoodDrink() {
     { id: 34, sentence: "You eat beans for dinner.", options: [], correctAnswer: "Do you eat beans for dinner?", userAnswer: "", isInterrogative: true },
     { id: 35, sentence: "You drink orange juice for breakfast.", options: [], correctAnswer: "Do you drink orange juice for breakfast?", userAnswer: "", isInterrogative: true },
     { id: 36, sentence: "You drink a slice of chocolate pie.", options: [], correctAnswer: "Do you drink a slice of chocolate pie?", userAnswer: "", isInterrogative: true },
-    
+   
     // Change into Interrogative - Third Person
     { id: 37, sentence: "She drinks coffee.", options: [], correctAnswer: "Does she drink coffee?", userAnswer: "", isInterrogative: true, usesThirdPerson: true },
     { id: 38, sentence: "He eats bread.", options: [], correctAnswer: "Does he eat bread?", userAnswer: "", isInterrogative: true, usesThirdPerson: true },
     { id: 39, sentence: "She likes pizza.", options: [], correctAnswer: "Does she like pizza?", userAnswer: "", isInterrogative: true, usesThirdPerson: true },
     { id: 40, sentence: "He wants water.", options: [], correctAnswer: "Does he want water?", userAnswer: "", isInterrogative: true, usesThirdPerson: true },
-    
+   
     // Change into Negative - Third Person
     { id: 41, sentence: "She likes coffee.", options: [], correctAnswer: "She doesn't like coffee.", userAnswer: "", isNegative: true, usesThirdPerson: true },
     { id: 42, sentence: "He eats meat.", options: [], correctAnswer: "He doesn't eat meat.", userAnswer: "", isNegative: true, usesThirdPerson: true },
@@ -257,25 +265,122 @@ export default function Lesson6FoodDrink() {
     { id: 16, question: "What does he eat for breakfast?", userAnswer: "" }
   ]);
 
+  const [videoQuestions, setVideoQuestions] = useState<VideoQuestion[]>([
+    {
+      id: 1,
+      question: "What do you do on the weekend?",
+      userAnswer: "",
+      isPersonal: true
+    },
+    {
+      id: 2,
+      question: "How long does the person in the video run for?",
+      userAnswer: "",
+      vocabulary: [
+        { english: "To go running", portuguese: "Ir correr (exercício)" },
+        { english: "About 40 minutes", portuguese: "Cerca de 40 minutos" }
+      ]
+    },
+    {
+      id: 3,
+      question: "What is the place we can get our nails done?",
+      userAnswer: "",
+      vocabulary: [
+        { english: "To get nails done", portuguese: "Fazer as unhas" },
+        { english: "Salon", portuguese: "Salão de beleza" }
+      ]
+    },
+    {
+      id: 4,
+      question: "What does the person in the video do when she doesn't have much time?",
+      userAnswer: "",
+      vocabulary: [
+        { english: "When", portuguese: "Quando" },
+        { english: "To go", portuguese: "Ir" },
+        { english: "Supermarket", portuguese: "Supermercado" }
+      ]
+    },
+    {
+      id: 5,
+      question: "How does the woman describe sushi in the video?",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Sushi", portuguese: "Sushi" },
+        { english: "Japanese dish", portuguese: "Prato japonês" },
+        { english: "Rice, fish, vegetables", portuguese: "Arroz, peixe, vegetais" },
+        { english: "Wrapped in seaweed", portuguese: "Envolto em alga marinha" }
+      ]
+    },
+    {
+      id: 6,
+      question: "What are frozen meals?",
+      userAnswer: "",
+      vocabulary: [
+        { english: "Frozen meals", portuguese: "Refeições congeladas" },
+        { english: "Pre-cooked dishes", portuguese: "Pratos pré-cozidos" },
+        { english: "Freezer", portuguese: "Congelador" }
+      ]
+    },
+    {
+      id: 7,
+      question: "Do you like buying dinner at the supermarket, or do you prefer to cook at home?",
+      userAnswer: "",
+      isPersonal: true
+    },
+    {
+      id: 8,
+      question: "Do you like indoor pets, like birds or fish?",
+      userAnswer: "",
+      vocabulary: [
+{ english: "Indoor pets", portuguese: "Animais de dentro de casa" },
+{ english: "Birds or fish", portuguese: "Pássaros ou peixes" },
+
+// Pássaros
+{ english: "Cockatiel", portuguese: "Calopsita" },
+{ english: "Parrot", portuguese: "Papagaio" },
+{ english: "Parakeet", portuguese: "Periquito" },
+
+// Peixes
+{ english: "Goldfish", portuguese: "Peixe-dourado" },
+{ english: "Betta fish", portuguese: "Peixe Betta" },
+{ english: "Guppy", portuguese: "Lebiste / Guppy" }
+
+      ],
+      isPersonal: true
+    }
+  ]);
+
   const [sections, setSections] = useState({
     listen: true,
     drilling: true,
-    questions: true
+    questions: true,
+    tuneIn: true
   });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
-        
+       
         const notesRef = doc(db, "userNotes", `${user.uid}_lesson6`);
         const notesSnap = await getDoc(notesRef);
         if (notesSnap.exists()) {
-          setNotes(notesSnap.data());
+          const data = notesSnap.data();
+          setNotes(data);
+         
+          // Load video answers if they exist
+          if (data.videoAnswers) {
+            setVideoQuestions(prev =>
+              prev.map(q => ({
+                ...q,
+                userAnswer: data.videoAnswers[q.id] || ""
+              }))
+            );
+          }
         }
       }
     });
-    
+   
     return () => unsubscribe();
   }, []);
 
@@ -298,6 +403,19 @@ export default function Lesson6FoodDrink() {
     }
   };
 
+  const saveVideoAnswers = async () => {
+    if (userId) {
+      const videoAnswers = videoQuestions.reduce((acc, q) => {
+        acc[q.id] = q.userAnswer;
+        return acc;
+      }, {} as Record<number, string>);
+     
+      const ref = doc(db, "userNotes", `${userId}_lesson6`);
+      await setDoc(ref, { ...notes, videoAnswers }, { merge: true });
+      alert("Respostas do vídeo salvas com sucesso!");
+    }
+  };
+
   const handleDialogueChange = (index: number, value: string) => {
     const newDialogues = [...dialogues];
     newDialogues[index] = { ...newDialogues[index], text: value };
@@ -305,8 +423,8 @@ export default function Lesson6FoodDrink() {
   };
 
   const handlePracticeAnswer = (id: number, answer: string) => {
-    setPracticeItems(prev => 
-      prev.map(item => 
+    setPracticeItems(prev =>
+      prev.map(item =>
         item.id === id ? { ...item, userAnswer: answer } : item
       )
     );
@@ -328,18 +446,52 @@ export default function Lesson6FoodDrink() {
     setIsNumberingChecked(false);
   };
 
+  const handleVideoAnswerChange = (id: number, answer: string) => {
+    setVideoQuestions(prev =>
+      prev.map(q =>
+        q.id === id ? { ...q, userAnswer: answer } : q
+      )
+    );
+  };
+
   const checkNumbering = () => {
-    const isCorrect = listenItems.every(item => 
+    const isCorrect = listenItems.every(item =>
       numberingAnswers[item.key] === item.correctOrder
     );
-    
+   
     setIsNumberingChecked(true);
     setIsNumberingCorrect(isCorrect);
-    
+   
     if (isCorrect) {
       alert("✅ Parabéns! Você acertou a ordem correta: 3, 2, 1");
     } else {
       alert("❌ A ordem ainda não está correta. Tente novamente!");
+    }
+  };
+
+  const checkVideoAnswer = (id: number) => {
+    const question = videoQuestions.find(q => q.id === id);
+    if (!question) return;
+
+    // For personal questions, just acknowledge
+    if (question.isPersonal) {
+      alert("Ótima resposta pessoal! Continue praticando.");
+      return;
+    }
+
+    // For factual questions, provide guidance
+    const correctAnswers: Record<number, string> = {
+      2: "She likes to run about 40 minutes.",
+      3: "At the salon.",
+      4: "She goes to the supermarket when she doesn't have much time.",
+      5: "A Japanese dish made with rice, fish, and sometimes vegetables, wrapped in seaweed.",
+      6: "Frozen meals are pre-cooked dishes that are kept in the freezer."
+    };
+
+    if (correctAnswers[id]) {
+      alert(`Compare sua resposta com esta referência:\n\n"${correctAnswers[id]}"`);
+    } else {
+      alert("Resposta verificada! Continue praticando.");
     }
   };
 
@@ -368,7 +520,7 @@ export default function Lesson6FoodDrink() {
           <div className="bg-blue-500 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
               <h2 className="text-2xl font-bold">🔊 1. Listen, Number, and Role-Play</h2>
-              <button 
+              <button
                 onClick={() => toggleSection('listen')}
                 className="ml-4 p-2 rounded-full hover:bg-blue-600 transition"
               >
@@ -385,7 +537,7 @@ export default function Lesson6FoodDrink() {
                 <p className="text-blue-700 mb-4">
                   Observe as imagens de pratos e ouça o áudio. Numere de acordo com a ordem que ouvir. Depois, crie um diálogo simples sobre pedir/comentar comida usando as frases úteis.
                 </p>
-                
+               
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <h4 className="font-bold text-blue-800 mb-2">Useful Phrases:</h4>
@@ -413,13 +565,13 @@ export default function Lesson6FoodDrink() {
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-blue-700">Numere as imagens na ordem correta:</h3>
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={checkNumbering}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
                       >
                         Verificar Ordem
                       </button>
-                      <button 
+                      <button
                         onClick={resetNumbering}
                         className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
                       >
@@ -427,7 +579,7 @@ export default function Lesson6FoodDrink() {
                       </button>
                     </div>
                   </div>
-                  
+                 
                   {isNumberingChecked && (
                     <div className={`mb-4 p-3 rounded-lg text-center font-bold ${
                       isNumberingCorrect ? 'bg-green-100 text-green-700 border-2 border-green-300' : 'bg-red-100 text-red-700 border-2 border-red-300'
@@ -439,15 +591,15 @@ export default function Lesson6FoodDrink() {
                       )}
                     </div>
                   )}
-                  
+                 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {listenItems.map((item) => (
-                      <div 
+                      <div
                         key={item.key}
                         className={`bg-white p-4 rounded-lg border-2 transition-all ${
-                          isNumberingChecked 
-                            ? (numberingAnswers[item.key] === item.correctOrder 
-                                ? 'border-green-500 bg-green-50' 
+                          isNumberingChecked
+                            ? (numberingAnswers[item.key] === item.correctOrder
+                                ? 'border-green-500 bg-green-50'
                                 : 'border-red-500 bg-red-50')
                             : 'border-blue-300'
                         }`}
@@ -456,8 +608,8 @@ export default function Lesson6FoodDrink() {
                           {numberingAnswers[item.key] ? `Nº ${numberingAnswers[item.key]}` : "Escolha o número"}
                         </div>
                         <div className="w-full h-40 relative mb-3">
-                          <Image 
-                            src={item.image} 
+                          <Image
+                            src={item.image}
                             alt={item.label}
                             fill
                             className="rounded-md object-cover"
@@ -469,7 +621,7 @@ export default function Lesson6FoodDrink() {
                         <p className="text-sm text-center text-gray-600 font-medium mb-3">
                           {item.description}
                         </p>
-                        
+                       
                         <div className="flex justify-center gap-2">
                           {[1, 2, 3].map((number) => (
                             <button
@@ -485,7 +637,7 @@ export default function Lesson6FoodDrink() {
                             </button>
                           ))}
                         </div>
-                        
+                       
                         {isNumberingChecked && (
                           <div className="mt-2 text-center text-xs">
                             {numberingAnswers[item.key] === item.correctOrder ? (
@@ -498,7 +650,7 @@ export default function Lesson6FoodDrink() {
                       </div>
                     ))}
                   </div>
-                  
+                 
                   <div className="mt-4 text-center text-sm text-blue-600">
                     <p><strong>💡 Sintam-se a vontade para ouvir o audio novamente antes de marcar a resposta correta.</strong></p>
                   </div>
@@ -511,7 +663,7 @@ export default function Lesson6FoodDrink() {
                 <div className="space-y-4 mb-4">
                   {dialogues.map((dialogue, index) => (
                     <div key={index} className="flex items-start gap-4">
-                      <input 
+                      <input
                         type="text"
                         value={dialogue.speaker}
                         onChange={(e) => {
@@ -531,7 +683,7 @@ export default function Lesson6FoodDrink() {
                     </div>
                   ))}
                 </div>
-                <button 
+                <button
                   onClick={saveNotes}
                   className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
                 >
@@ -547,7 +699,7 @@ export default function Lesson6FoodDrink() {
           <div className="bg-green-500 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
               <h2 className="text-2xl font-bold">💬 2. Drilling Practice</h2>
-              <button 
+              <button
                 onClick={() => toggleSection('drilling')}
                 className="ml-4 p-2 rounded-full hover:bg-green-600 transition"
               >
@@ -609,7 +761,7 @@ export default function Lesson6FoodDrink() {
                       />
                       {item.userAnswer && (
                         <div className="mt-2">
-                          <button 
+                          <button
                             onClick={() => {
                               const isCorrect = item.userAnswer.toLowerCase() === item.correctAnswer.toLowerCase();
                               alert(isCorrect ? '✅ Correto!' : `❌ Resposta correta: ${item.correctAnswer}`);
@@ -780,11 +932,11 @@ export default function Lesson6FoodDrink() {
         </div>
 
         {/* 3. QUESTIONS */}
-        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden">
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
           <div className="bg-purple-500 text-white py-4 px-8 flex items-center justify-between">
             <div className="flex items-center">
               <h2 className="text-2xl font-bold">❓ 3. Questions</h2>
-              <button 
+              <button
                 onClick={() => toggleSection('questions')}
                 className="ml-4 p-2 rounded-full hover:bg-purple-600 transition"
               >
@@ -798,7 +950,7 @@ export default function Lesson6FoodDrink() {
               <p className="text-purple-700 mb-6 italic">
                 👉 Responda oralmente às perguntas abaixo, usando frases curtas e completas.
               </p>
-              
+             
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {questions.map((q) => (
                   <div key={q.id} className="bg-white p-4 rounded-lg border border-purple-200">
@@ -823,6 +975,202 @@ export default function Lesson6FoodDrink() {
                   <li>Pratique a pronúncia gravando suas respostas</li>
                   <li>Use o vocabulário aprendido na lição</li>
                 </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* TUNE IN YOUR EARS - SEÇÃO COMPLETAMENTE ATUALIZADA */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🎧 TUNE IN YOUR EARS</h2>
+              <button
+                onClick={() => toggleSection('tuneIn')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.tuneIn ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.tuneIn && (
+            <div className="p-8">
+              <div className="mb-8 text-center">
+                <h3 className="text-2xl font-bold text-teal-700 mb-4">
+                  Watch the video and answer the questions below:
+                </h3>
+               
+                {/* Container do vídeo do YouTube ATUALIZADO */}
+                <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto max-w-4xl">
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src="https://www.youtube.com/embed/7mf45HGIMZ0"
+                      title="English Listening Practice - Daily Routines"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-[400px] md:h-[500px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-teal-600">
+                  <p>Video: English Listening Practice - Daily Routines & Weekend Activities</p>
+                </div>
+              </div>
+
+              {/* Vocabulary Help - ATUALIZADO */}
+              <div className="mb-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">📖 Key Vocabulary from the Video:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">A little bit</span>
+                      <span className="text-teal-600">Um pouquinho</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To go running</span>
+                      <span className="text-teal-600">Ir correr (exercício)</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Less</span>
+                      <span className="text-teal-600">menos</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Meal</span>
+                      <span className="text-teal-600">refeição</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Sauce</span>
+                      <span className="text-teal-600">molho</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Toppings</span>
+                      <span className="text-teal-600">cobertura</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Early</span>
+                      <span className="text-teal-600">cedo</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To wake up</span>
+                      <span className="text-teal-600">acordar cedo</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">By car</span>
+                      <span className="text-teal-600">de carro</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Nephew</span>
+                      <span className="text-teal-600">sobrinho</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Wedding</span>
+                      <span className="text-teal-600">casamento</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Weekend</span>
+                      <span className="text-teal-600">final de semana</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Chores</span>
+                      <span className="text-teal-600">tarefas</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To sweep the floor</span>
+                      <span className="text-teal-600">varrer o chão</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Eyelashes</span>
+                      <span className="text-teal-600">cílios</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Thoughts</span>
+                      <span className="text-teal-600">pensamentos</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Pre-made food</span>
+                      <span className="text-teal-600">Comida pré-feita</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To nap</span>
+                      <span className="text-teal-600">tirar um cochilo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions Section - ATUALIZADA */}
+              <div className="space-y-6 mb-8">
+                {videoQuestions.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-teal-200 shadow-md">
+                    <h4 className="text-lg font-bold text-teal-700 mb-3">
+                      {question.question}
+                      {question.isPersonal && (
+                        <span className="ml-2 text-sm font-normal text-teal-500">(Personal answer)</span>
+                      )}
+                    </h4>
+                   
+                    {question.vocabulary && (
+                      <div className="mb-3 p-3 bg-teal-50 rounded-lg">
+                        <p className="text-sm font-medium text-teal-600 mb-1">Vocabulary hints:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {question.vocabulary.map((word, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-teal-700 font-medium">{word.english}</span>
+                              <span className="text-teal-600">- {word.portuguese}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <textarea
+                      value={question.userAnswer}
+                      onChange={(e) => handleVideoAnswerChange(question.id, e.target.value)}
+                      placeholder="Write your answer here..."
+                      className="w-full h-24 p-3 border border-teal-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    />
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => checkVideoAnswer(question.id)}
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md transition font-medium"
+                      >
+                        Check Answer
+                      </button>
+                      <button
+                        onClick={() => handleVideoAnswerChange(question.id, "")}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Learning Tips */}
+              <div className="mt-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">💡 Tips for Better Listening:</h3>
+<ul className="list-disc pl-5 space-y-2 text-teal-700 text-sm">
+    <li><strong>Concentre-se no vocabulário do dia a dia:</strong> Preste atenção em palavras relacionadas a atividades, comida e planos de fim de semana.</li>
+    <li><strong>Ouça por expressões de tempo:</strong> Note palavras como “fim de semana”, “40 minutos” ou “quando não tenho muito tempo”.</li>
+    <li><strong>Identifique informações pessoais e factuais:</strong> Algumas perguntas pedem sua opinião, outras pedem informações do conteúdo do vídeo.</li>
+    <li><strong>Use as dicas de vocabulário:</strong> As palavras fornecidas vão te ajudar a entender os conceitos principais.</li>
+    <li><strong>Assista várias vezes, se necessário:</strong> Pause e volte o vídeo para captar todos os detalhes.</li>
+  </ul>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={saveVideoAnswers}
+                  className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                >
+                  Save My Answers
+                </button>
               </div>
             </div>
           )}
