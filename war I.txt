@@ -1,0 +1,3 @@
+- Nome do exército
+- Cor do exército
+- Número de tropas

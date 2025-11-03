@@ -4,12 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-type SectionKey = 'pinpoint' | 'conversation' | 'assessment' | 'practice';
+type SectionKey = 'pinpoint' | 'assessment';
 
 export default function ReviewLessonFoodDrink() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<SectionKey>('pinpoint');
-  const [showAnswers, setShowAnswers] = useState(false);
 
   const playAudio = (word: string) => {
     const formattedWord = word
@@ -41,60 +40,27 @@ export default function ReviewLessonFoodDrink() {
         { english: "I want to eat beef and salad for dinner.", portuguese: "Eu quero comer carne e salada no jantar" },
         { english: "I want a slice of apple pie, please.", portuguese: "Eu quero uma fatia de torta de maçã, por favor" },
         { english: "I want to drink a cup of coffee.", portuguese: "Eu quero beber uma xícara de café" },
-        { english: "I don't want a glass of water, thanks.", portuguese: "Eu não quero um copo de água, obrigado" }
-      ]
-    },
-    conversation: {
-      title: "💬 Questions and Answers",
-      content: {
-        questions: [
-          { english: "Do you like pancakes?", portuguese: "Você gosta de panquecas?" },
-          { english: "Do you like to eat vegetables?", portuguese: "Você gosta de comer legumes?" },
-          { english: "Do you want to drink soda?", portuguese: "Você quer beber refrigerante?" },
-          { english: "What do you eat for breakfast?", portuguese: "O que você come no café da manhã?" },
-          { english: "What do you like to drink?", portuguese: "O que você gosta de beber?" }
-        ],
-        answers: [
-          "Yes, I do.",
-          "No, I don't.",
-          "I love rice and beans. And you?",
-          "I like to eat tomatoes.",
-          "I want to eat chocolate cookies.",
-          "I don't want orange juice."
-        ],
-        greetings: [
-          "Good morning.",
-          "Good afternoon.",
-          "Good evening.",
-          "Good night.",
-          "See you later.",
-          "Bye. See you."
-        ]
-      }
-    },
-    practice: {
-      title: "🎯 Conversation Practice",
-      content: [
-        { portuguese: "Você quer um copo de suco?", english: "Do you want a glass of juice?" },
-        { portuguese: "Você come legumes no almoço?", english: "Do you eat vegetables for lunch?" },
-        { portuguese: "Você gosta de sanduíches?", english: "Do you like sandwiches?" },
-        { portuguese: "Você prefere beber café ou suco no café da manhã?", english: "Do you prefer to drink coffee or juice for breakfast?" },
-        { portuguese: "O que você prefere beber: leite ou café?", english: "What do you prefer to drink: milk or coffee?" },
-        { portuguese: "O que você quer beber?", english: "What do you want to drink?" },
-        { portuguese: "O que você quer comer no jantar?", english: "What do you want to eat for dinner?" },
-        { portuguese: "O que você gosta de beber no café da manhã?", english: "What do you like to drink for breakfast?" },
-        { portuguese: "Você gosta de leite?", english: "Do you like milk?" },
-        { portuguese: "Você gosta de peixe?", english: "Do you like fish?" },
-        { portuguese: "Você quer uma fatia de torta?", english: "Do you want a slice of pie?" },
-        { portuguese: "O que você gosta de comer?", english: "What do you like to eat?" },
-        { portuguese: "Você bebe refrigerante?", english: "Do you drink soda?" },
-        { portuguese: "Você come frutas no café da manhã?", english: "Do you eat fruits for breakfast?" },
-        { portuguese: "Você toma suco de laranja?", english: "Do you drink orange juice?" },
-        { portuguese: "Você quer um copo de água?", english: "Do you want a glass of water?" },
-        { portuguese: "Você quer um copo de suco de laranja?", english: "Do you want a glass of orange juice?" },
-        { portuguese: "Você quer uma xícara de café?", english: "Do you want a cup of coffee?" },
-        { portuguese: "Você prefere beber suco ou refrigerante?", english: "Do you prefer to drink juice or soda?" },
-        { portuguese: "Você prefere comer frutas ou chocolate?", english: "Do you prefer to eat fruits or chocolate?" }
+        { english: "I don't want a glass of water, thanks.", portuguese: "Eu não quero um copo de água, obrigado" },
+        // Questions from conversation section
+        { english: "Do you like pancakes?", portuguese: "Você gosta de panquecas?" },
+        { english: "Do you like to eat vegetables?", portuguese: "Você gosta de comer legumes?" },
+        { english: "Do you want to drink soda?", portuguese: "Você quer beber refrigerante?" },
+        { english: "What do you eat for breakfast?", portuguese: "O que você come no café da manhã?" },
+        { english: "What do you like to drink?", portuguese: "O que você gosta de beber?" },
+        // Answers from conversation section
+        { english: "Yes, I do.", portuguese: "Sim, eu gosto." },
+        { english: "No, I don't.", portuguese: "Não, eu não gosto." },
+        { english: "I love rice and beans. And you?", portuguese: "Eu amo arroz e feijão. E você?" },
+        { english: "I like to eat tomatoes.", portuguese: "Eu gosto de comer tomates." },
+        { english: "I want to eat chocolate cookies.", portuguese: "Eu quero comer biscoitos de chocolate." },
+        { english: "I don't want orange juice.", portuguese: "Eu não quero suco de laranja." },
+        // Greetings from conversation section
+        { english: "Good morning.", portuguese: "Bom dia." },
+        { english: "Good afternoon.", portuguese: "Boa tarde." },
+        { english: "Good evening.", portuguese: "Boa noite." },
+        { english: "Good night.", portuguese: "Boa noite." },
+        { english: "See you later.", portuguese: "Até mais tarde." },
+        { english: "Bye. See you.", portuguese: "Tchau. Até mais." }
       ]
     },
     assessment: {
@@ -138,7 +104,7 @@ export default function ReviewLessonFoodDrink() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           {Object.entries(sections).map(([key, section]) => (
             <button
               key={key}
@@ -180,147 +146,6 @@ export default function ReviewLessonFoodDrink() {
                         <div className="text-xl font-bold text-blue-700 mb-2">{item.english}</div>
                         <div className="text-lg text-gray-600">{item.portuguese}</div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Conversation Section */}
-          {activeSection === 'conversation' && (
-            <div className="space-y-8">
-              <h2 className="text-3xl font-bold text-green-600 mb-6 text-center">
-                💬 Questions and Answers
-              </h2>
-              
-              {/* Questions */}
-              <div>
-                <h3 className="text-2xl font-bold text-green-700 mb-4">Questions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sections.conversation.content.questions.map((item, index) => (
-                    <div key={index} className="bg-green-100 p-4 rounded-xl border-2 border-green-200">
-                      <div className="flex items-start space-x-3">
-                        <button 
-                          onClick={() => playAudio(item.english)}
-                          className="flex-shrink-0 text-green-600 hover:text-green-800 transition-colors mt-1"
-                          aria-label="Play audio"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          </svg>
-                        </button>
-                        <div>
-                          <div className="font-bold text-green-800">{item.english}</div>
-                          <div className="text-sm text-gray-600">{item.portuguese}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Answers */}
-              <div>
-                <h3 className="text-2xl font-bold text-green-700 mb-4">Answers</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sections.conversation.content.answers.map((answer, index) => (
-                    <div key={index} className="bg-blue-100 p-4 rounded-xl border-2 border-blue-200">
-                      <div className="flex items-start space-x-3">
-                        <button 
-                          onClick={() => playAudio(answer)}
-                          className="flex-shrink-0 text-blue-600 hover:text-blue-800 transition-colors mt-1"
-                          aria-label="Play audio"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          </svg>
-                        </button>
-                        <div className="font-bold text-blue-800">{answer}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Greetings */}
-              <div>
-                <h3 className="text-2xl font-bold text-purple-700 mb-4">Greetings and Farewells</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {sections.conversation.content.greetings.map((greeting, index) => (
-                    <div key={index} className="bg-purple-100 p-4 rounded-xl border-2 border-purple-200 text-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <button 
-                          onClick={() => playAudio(greeting)}
-                          className="text-purple-600 hover:text-purple-800 transition-colors"
-                          aria-label="Play audio"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          </svg>
-                        </button>
-                        <span className="font-bold text-purple-800">{greeting}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Practice Section */}
-          {activeSection === 'practice' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-red-600">
-                  🎯 Conversation Practice
-                </h2>
-                <button
-                  onClick={() => setShowAnswers(!showAnswers)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full font-bold transition-colors"
-                >
-                  {showAnswers ? 'Hide Answers' : 'Show Answers'}
-                </button>
-              </div>
-              
-              <div className="space-y-6">
-                {sections.practice.content.map((item, index) => (
-                  <div key={index} className="bg-gradient-to-br from-red-100 to-orange-100 p-6 rounded-2xl shadow-lg border-2 border-red-200">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-start space-x-4">
-                          <button 
-                            onClick={() => playAudio(item.portuguese)}
-                            className="flex-shrink-0 text-red-600 hover:text-red-800 transition-colors mt-1"
-                            aria-label="Play audio"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            </svg>
-                          </button>
-                          <div>
-                            <h3 className="text-xl font-bold text-red-700 mb-2">
-                              {item.portuguese}
-                            </h3>
-                            {showAnswers && (
-                              <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-lg">
-                                {item.english}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {showAnswers && (
-                        <button 
-                          onClick={() => playAudio(item.english)}
-                          className="ml-4 bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-colors"
-                          aria-label="Play answer audio"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          </svg>
-                        </button>
-                      )}
                     </div>
                   </div>
                 ))}

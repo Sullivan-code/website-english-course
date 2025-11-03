@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 type SectionKey = 'verbs' | 'vocabulary' | 'usefulPhrases' | 'grammar';
 
@@ -36,7 +35,7 @@ export default function LessonLanguagesAndCountries() {
     <div
       className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
       style={{
-        backgroundImage: `url("/images/l7-bg.jpg")`,
+        backgroundImage: `url("/images/l7-bgg.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -54,11 +53,9 @@ export default function LessonLanguagesAndCountries() {
             Aprenda a falar sobre idiomas, países e praticar conversas em inglês. 🌍🗣️
           </p>
           <div className="w-64 h-64 mx-auto">
-            <Image
-              src="/images/l7-bgg.jpg"
+            <img
+              src="https://i.ibb.co/nsrGVyhd/l7-main1.jpg"
               alt="Languages and Countries"
-              width={256}
-              height={256}
               className="w-full h-full object-cover rounded-2xl shadow-md"
             />
           </div>
@@ -737,12 +734,10 @@ export default function LessonLanguagesAndCountries() {
                 <div className="lg:w-1/3 flex flex-col gap-4">
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
-                      <Image
-                        src="/images/languages-image1.jpg"
+                      <img
+                        src="https://i.ibb.co/VcLcyCZk/l7-reallife-1.jpg"
                         alt="Pessoas estudando idiomas"
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-xl"
+                        className="w-full h-full object-cover rounded-xl"
                       />
                     </div>
                     <p className="text-center mt-2 text-gray-700 italic">
@@ -752,12 +747,10 @@ export default function LessonLanguagesAndCountries() {
                   
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
-                      <Image
-                        src="/images/languages-image2.jpg"
+                      <img
+                        src="https://i.ibb.co/7xHnG0TG/l7-reallife-2.jpg"
                         alt="Diferentes bandeiras e culturas"
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-xl"
+                        className="w-full h-full object-cover rounded-xl"
                       />
                     </div>
                     <p className="text-center mt-2 text-gray-700 italic">
@@ -792,11 +785,9 @@ export default function LessonLanguagesAndCountries() {
 
             {/* Coluna central - Imagem e balão */}
             <div className="bg-white flex-1 p-6 flex flex-col items-center justify-center text-xl relative">
-              <Image
-                src="/images/languages-avatar.jpg"
+              <img
+                src="https://i.ibb.co/B5pP4H6f/l7-checkitout-img.jpg"
                 alt="Pessoa falando idiomas"
-                width={160}
-                height={160}
                 className="rounded-full w-40 h-40 object-cover mb-4"
               />
               <div className="bg-yellow-200 text-black px-4 py-2 rounded-xl shadow-md text-center">
