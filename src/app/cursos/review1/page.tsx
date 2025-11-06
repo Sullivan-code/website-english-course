@@ -9,6 +9,7 @@ type SectionKey = 'pinpoint' | 'assessment';
 export default function ReviewLessonFoodDrink() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<SectionKey>('pinpoint');
+  const [ratings, setRatings] = useState<number[]>([2, 2, 2, 2, 2, 2, 2, 2, 2]);
 
   const playAudio = (word: string) => {
     const formattedWord = word
@@ -20,40 +21,55 @@ export default function ReviewLessonFoodDrink() {
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
   };
 
+  const handleRatingClick = (index: number, rating: number) => {
+    const newRatings = [...ratings];
+    newRatings[index] = rating;
+    setRatings(newRatings);
+  };
+
+  const getRatingColor = (rating: number) => {
+    switch (rating) {
+      case 1: return 'bg-red-400';
+      case 2: return 'bg-yellow-400';
+      case 3: return 'bg-green-400';
+      default: return 'bg-gray-300';
+    }
+  };
+
   const sections = {
     pinpoint: {
       title: "📖 PINPOINT - Sentences and Examples",
       content: [
         { english: "I eat bread and butter.", portuguese: "Eu como pão com manteiga" },
-        { english: "I drink coffee with milk.", portuguese: "Eu bebo café com leite" },
-        { english: "I like crackers.", portuguese: "Eu gosto de biscoitos salgados" },
-        { english: "I like to eat granola.", portuguese: "Eu gosto de comer granola" },
-        { english: "I drink juice.", portuguese: "Eu bebo suco" },
+        { english: "She drinks coffee with milk.", portuguese: "Ela bebe café com leite" },
+        { english: "He likes crackers.", portuguese: "Ele gosta de biscoitos salgados" },
+        { english: "You like to eat granola.", portuguese: "Você gosta de comer granola" },
+        { english: "It tastes good.", portuguese: "Isso tem um gosto bom" },
         { english: "I want to drink coffee.", portuguese: "Eu quero beber café" },
-        { english: "I prefer yogurt.", portuguese: "Eu prefiro iogurte" },
-        { english: "I prefer to eat eggs.", portuguese: "Eu prefiro comer ovos" },
-        { english: "I don't eat chicken.", portuguese: "Eu não como frango" },
+        { english: "He prefers yogurt.", portuguese: "Ele prefere iogurte" },
+        { english: "She prefers to eat eggs.", portuguese: "Ela prefere comer ovos" },
+        { english: "You don't eat chicken.", portuguese: "Você não come frango" },
         { english: "I don't drink milk.", portuguese: "Eu não bebo leite" },
-        { english: "I don't like honey.", portuguese: "Eu não gosto de mel" },
-        { english: "I drink juice for breakfast.", portuguese: "Eu bebo suco no café da manhã" },
-        { english: "I don't want to eat chicken for lunch.", portuguese: "Eu não quero comer frango no almoço" },
-        { english: "I want to eat beef and salad for dinner.", portuguese: "Eu quero comer carne e salada no jantar" },
-        { english: "I want a slice of apple pie, please.", portuguese: "Eu quero uma fatia de torta de maçã, por favor" },
-        { english: "I want to drink a cup of coffee.", portuguese: "Eu quero beber uma xícara de café" },
-        { english: "I don't want a glass of water, thanks.", portuguese: "Eu não quero um copo de água, obrigado" },
+        { english: "He doesn't like honey.", portuguese: "Ele não gosta de mel" },
+        { english: "She drinks juice for breakfast.", portuguese: "Ela bebe suco no café da manhã" },
+        { english: "You don't want to eat chicken for lunch.", portuguese: "Você não quer comer frango no almoço" },
+        { english: "He wants to eat beef and salad for dinner.", portuguese: "Ele quer comer carne e salada no jantar" },
+        { english: "She wants a slice of apple pie, please.", portuguese: "Ela quer uma fatia de torta de maçã, por favor" },
+        { english: "You want to drink a cup of coffee.", portuguese: "Você quer beber uma xícara de café" },
+        { english: "He doesn't want a glass of water, thanks.", portuguese: "Ele não quer um copo de água, obrigado" },
         // Questions from conversation section
         { english: "Do you like pancakes?", portuguese: "Você gosta de panquecas?" },
-        { english: "Do you like to eat vegetables?", portuguese: "Você gosta de comer legumes?" },
-        { english: "Do you want to drink soda?", portuguese: "Você quer beber refrigerante?" },
+        { english: "Does she like to eat vegetables?", portuguese: "Ela gosta de comer legumes?" },
+        { english: "Does he want to drink soda?", portuguese: "Ele quer beber refrigerante?" },
         { english: "What do you eat for breakfast?", portuguese: "O que você come no café da manhã?" },
-        { english: "What do you like to drink?", portuguese: "O que você gosta de beber?" },
+        { english: "What does she like to drink?", portuguese: "O que ela gosta de beber?" },
         // Answers from conversation section
         { english: "Yes, I do.", portuguese: "Sim, eu gosto." },
         { english: "No, I don't.", portuguese: "Não, eu não gosto." },
-        { english: "I love rice and beans. And you?", portuguese: "Eu amo arroz e feijão. E você?" },
-        { english: "I like to eat tomatoes.", portuguese: "Eu gosto de comer tomates." },
-        { english: "I want to eat chocolate cookies.", portuguese: "Eu quero comer biscoitos de chocolate." },
-        { english: "I don't want orange juice.", portuguese: "Eu não quero suco de laranja." },
+        { english: "He loves rice and beans. And you?", portuguese: "Ele ama arroz e feijão. E você?" },
+        { english: "She likes to eat tomatoes.", portuguese: "Ela gosta de comer tomates." },
+        { english: "You want to eat chocolate cookies.", portuguese: "Você quer comer biscoitos de chocolate." },
+        { english: "He doesn't want orange juice.", portuguese: "Ele não quer suco de laranja." },
         // Greetings from conversation section
         { english: "Good morning.", portuguese: "Bom dia." },
         { english: "Good afternoon.", portuguese: "Boa tarde." },
@@ -165,23 +181,70 @@ export default function ReviewLessonFoodDrink() {
                   <strong>I can... (Eu consigo...)</strong>
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {sections.assessment.content.map((item, index) => (
-                    <div key={index} className="bg-white p-4 rounded-xl border-2 border-purple-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
-                          {index + 1}
+                    <div key={index} className="bg-white p-6 rounded-xl border-2 border-purple-100 shadow-sm">
+                      <div className="flex flex-col space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="text-purple-800 font-medium">{item}</span>
                         </div>
-                        <span className="text-purple-800">{item}</span>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex space-x-2">
+                            {[1, 2, 3].map((rating) => (
+                              <button
+                                key={rating}
+                                onClick={() => handleRatingClick(index, rating)}
+                                className={`w-8 h-8 rounded-full transition-all duration-200 ${
+                                  ratings[index] === rating 
+                                    ? getRatingColor(rating) + ' transform scale-110'
+                                    : 'bg-gray-200 hover:bg-gray-300'
+                                }`}
+                                aria-label={`Rate ${rating} for "${item}"`}
+                              >
+                                {ratings[index] === rating && (
+                                  <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                                    {rating === 1 ? 'N' : rating === 2 ? 'G' : 'E'}
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                          
+                          <div className="text-sm text-gray-500 font-medium">
+                            {ratings[index] === 1 && 'Needs Practice'}
+                            {ratings[index] === 2 && 'Good'}
+                            {ratings[index] === 3 && 'Excellent'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="mt-6 bg-yellow-100 border-2 border-yellow-400 rounded-xl p-4 text-center">
-                  <p className="text-yellow-800 font-bold">
-                    ✅ Rate yourself: Excellent | Good | Needs Practice
-                  </p>
+                <div className="mt-8 bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-xl p-6">
+                  <div className="text-center mb-4">
+                    <p className="text-yellow-800 font-bold text-lg">
+                      🎯 Rating Guide
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-3">
+                      <div className="w-4 h-4 bg-red-400 rounded-full mx-auto mb-2"></div>
+                      <span className="text-red-700 font-medium text-sm">Needs Practice</span>
+                    </div>
+                    <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3">
+                      <div className="w-4 h-4 bg-yellow-400 rounded-full mx-auto mb-2"></div>
+                      <span className="text-yellow-700 font-medium text-sm">Good</span>
+                    </div>
+                    <div className="bg-green-100 border border-green-300 rounded-lg p-3">
+                      <div className="w-4 h-4 bg-green-400 rounded-full mx-auto mb-2"></div>
+                      <span className="text-green-700 font-medium text-sm">Excellent</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
