@@ -183,11 +183,11 @@ export default function Lesson6FoodDrink() {
  
   const [practiceItems, setPracticeItems] = useState<PracticeItem[]>([
     // Substitution Practice I
-    { id: 1, sentence: "I prefer sweet cookies. And you?", options: ["savory cookies", "toast"], correctAnswer: "savory cookies", userAnswer: "" },
-    { id: 2, sentence: "I like to eat toast with jam.", options: ["butter", "honey"], correctAnswer: "butter", userAnswer: "" },
-    { id: 3, sentence: "I prefer to drink soda.", options: ["orange juice", "apple juice"], correctAnswer: "orange juice", userAnswer: "" },
-    { id: 4, sentence: "I love to eat French fries for lunch.", options: ["salad", "vegetables"], correctAnswer: "salad", userAnswer: "" },
-    { id: 5, sentence: "I want to drink a cup of tea.", options: ["coffee"], correctAnswer: "coffee", userAnswer: "" },
+    { id: 1, sentence: "I prefer to eat cookies. And you?", options: ["crackers", "soda"], correctAnswer: "crackers", userAnswer: "" },
+    { id: 2, sentence: "I like to eat toast with jam.", options: ["butter", "pancakes"], correctAnswer: "butter", userAnswer: "" },
+    { id: 3, sentence: "I prefer to drink soda.", options: ["orange juice", "apple pie"], correctAnswer: "orange juice", userAnswer: "" },
+    { id: 4, sentence: "I love to eat French fries for lunch.", options: ["yogurt", "vegetables"], correctAnswer: "vegetables", userAnswer: "" },
+    { id: 5, sentence: "I want to drink a cup of tea.", options: ["coffee", "yogurt"], correctAnswer: "coffee", userAnswer: "" },
    
     // Change into Negative
     { id: 6, sentence: "I want to eat crackers and jam.", options: [], correctAnswer: "I don't want to eat crackers and jam.", userAnswer: "", isNegative: true },
@@ -614,9 +614,6 @@ export default function Lesson6FoodDrink() {
                             fill
                             className="rounded-md object-cover"
                           />
-                        </div>
-                        <div className="flex justify-center mb-2">
-                          <AudioPlayer src={item.audio} compact />
                         </div>
                         <p className="text-sm text-center text-gray-600 font-medium mb-3">
                           {item.description}

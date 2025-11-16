@@ -37,8 +37,11 @@ export default function LessonFoodAndDrink() {
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
   };
 
-  // URL base do Google Drive para as imagens
-  const googleDriveImageUrl = "https://drive.google.com/uc?export=view&id=1ca12OQO3mVe9DmCSME50E8k_x2ewnDc2";
+  // URLs das imagens
+  const mainImage = "https://i.ibb.co/tTpRLxNr/l5-main.jpg";
+  const beefAndFishImage = "https://i.ibb.co/N6P2sn5P/beef-and-fish.jpg";
+  const drinkAndSandwichImage = "https://i.ibb.co/5xwfgP0Y/drink-and-sandwich.jpg";
+  const vegetablesImage = "https://i.ibb.co/whTg289T/vegetables.jpg";
 
   return (
     <div
@@ -63,7 +66,7 @@ export default function LessonFoodAndDrink() {
           </p>
           <div className="w-64 h-64 mx-auto">
             <img
-              src={googleDriveImageUrl}
+              src={mainImage}
               alt="Food and drink"
               className="w-full h-full object-cover rounded-2xl shadow-md"
             />
@@ -839,7 +842,7 @@ export default function LessonFoodAndDrink() {
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
                       <img
-                        src={googleDriveImageUrl}
+                        src={beefAndFishImage}
                         alt="Refeições principais"
                         className="rounded-xl object-cover w-full h-full"
                       />
@@ -852,7 +855,7 @@ export default function LessonFoodAndDrink() {
                   <div className="bg-white rounded-2xl p-4 shadow-md h-full">
                     <div className="relative h-64 w-full">
                       <img
-                        src={"googleDriveImageUrl"}
+                        src={drinkAndSandwichImage}
                         alt="Bebidas e sanduíches"
                         className="rounded-xl object-cover w-full h-full"
                       />
@@ -941,7 +944,7 @@ export default function LessonFoodAndDrink() {
             {/* Coluna central - Imagem e balão */}
             <div className="bg-white flex-1 p-6 flex flex-col items-center justify-center text-xl relative">
               <img
-                src={googleDriveImageUrl}
+                src={vegetablesImage}
                 alt="Pessoa escolhendo comida"
                 className="rounded-full w-40 h-40 object-cover mb-4"
               />

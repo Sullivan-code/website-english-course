@@ -1,0 +1,1072 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useEffect, useState, useRef } from "react";
+import { db, auth } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { Pause, Play, RotateCcw, Volume2, ChevronDown, ChevronUp, X, Check, XCircle } from "lucide-react";
+
+// Dados atualizados para focar em idiomas e países
+const substitutionPractice1 = [
+  { 
+    key: "subs-1", 
+    original: "Eles estudam inglês na escola. / Nós / Eu",
+    base: "{0} study English at school.",
+    options: ["They", "We", "I"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-2", 
+    original: "Você fala francês também? / alemão / italiano",
+    base: "Do you speak {0} too?",
+    options: ["French", "German", "Italian"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-3", 
+    original: "Ela gosta de estudar com seu amigo. / seu professor / suas amigas",
+    base: "She likes to study with {0}.",
+    options: ["her friend", "her teacher", "her friends"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-4", 
+    original: "Como se escreve 'milk'? / apple / butter",
+    base: "How do you spell '{0}'?",
+    options: ["milk", "apple", "butter"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-5", 
+    original: "Nós preferimos estudar de manhã. / à tarde",
+    base: "We prefer to study {0}.",
+    options: ["in the morning", "in the afternoon"],
+    currentIndex: 0
+  }
+];
+
+const substitutionPractice2 = [
+  { 
+    key: "subs2-1", 
+    original: "Ele não quer beber suco no café da manhã. /água/leite",
+    correctAnswer: "He doesn't want to drink juice for breakfast.",
+    options: ["juice", "water", "milk"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-2", 
+    original: "Eles preferem comer salada. /Eu/Nós",
+    correctAnswer: "They prefer to eat salad.",
+    options: ["They", "I", "We"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-3", 
+    original: "Nós queremos comer uma fatia de torta. /queijo/pão",
+    correctAnswer: "We want to eat a slice of pie.",
+    options: ["pie", "cheese", "bread"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-4", 
+    original: "Ela ama comer batatas fritas. E você?/torradas/geleia",
+    correctAnswer: "She loves to eat french fries. And you?",
+    options: ["french fries", "toast", "jam"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-5", 
+    original: "Eu não estudo português aqui. / lá/na escola",
+    correctAnswer: "I don't study Portuguese here.",
+    options: ["here", "there", "at school"],
+    currentIndex: 0
+  }
+];
+
+const negativeExercises = [
+  { 
+    key: "neg-1", 
+    sentence: "She studies French in the afternoon.",
+    answer: "She doesn't study French in the afternoon."
+  },
+  { 
+    key: "neg-2", 
+    sentence: "He eats bread and butter in the morning.",
+    answer: "He doesn't eat bread and butter in the morning."
+  },
+  { 
+    key: "neg-3", 
+    sentence: "They want to eat eggs for breakfast.",
+    answer: "They don't want to eat eggs for breakfast."
+  },
+  { 
+    key: "neg-4", 
+    sentence: "We drink a cup of tea in the afternoon.",
+    answer: "We don't drink a cup of tea in the afternoon."
+  },
+  { 
+    key: "neg-5", 
+    sentence: "He likes to eat fish.",
+    answer: "He doesn't like to eat fish."
+  },
+  { 
+    key: "neg-6", 
+    sentence: "She speaks English with her teacher.",
+    answer: "She doesn't speak English with her teacher."
+  }
+];
+
+const affirmativeExercises = [
+  { 
+    key: "aff-1", 
+    sentence: "He doesn't eat sausages for breakfast.",
+    answer: "He eats sausages for breakfast."
+  },
+  { 
+    key: "aff-2", 
+    sentence: "She doesn't like to drink apple juice.",
+    answer: "She likes to drink apple juice."
+  },
+  { 
+    key: "aff-3", 
+    sentence: "They don't eat salad for lunch.",
+    answer: "They eat salad for lunch."
+  },
+  { 
+    key: "aff-4", 
+    sentence: "He doesn't speak Portuguese at school.",
+    answer: "He speaks Portuguese at school."
+  },
+  { 
+    key: "aff-5", 
+    sentence: "We don't study with your teacher.",
+    answer: "We study with your teacher."
+  }
+];
+
+const interrogativeExercises = [
+  { 
+    key: "int-1", 
+    sentence: "He speaks Italian with his friend.",
+    answer: "Does he speak Italian with his friend?"
+  },
+  { 
+    key: "int-2", 
+    sentence: "She prefers to study English.",
+    answer: "Does she prefer to study English?"
+  },
+  { 
+    key: "int-3", 
+    sentence: "They want to drink a glass of water.",
+    answer: "Do they want to drink a glass of water?"
+  },
+  { 
+    key: "int-4", 
+    sentence: "We want to study there.",
+    answer: "Do we want to study there?"
+  },
+  { 
+    key: "int-5", 
+    sentence: "He wants to eat beef.",
+    answer: "Does he want to eat beef?"
+  }
+];
+
+const personalQuestions = [
+  {
+    id: 1,
+    question: "Do you speak English with your friends from other countries?",
+    placeholder: "Write about which languages you speak with international friends..."
+  },
+  {
+    id: 2,
+    question: "How do you spell the name of your favorite country?",
+    placeholder: "Spell the country name here..."
+  },
+  {
+    id: 3,
+    question: "Do you prefer to study languages in the morning or afternoon?",
+    placeholder: "Write your preference and explain why..."
+  },
+  {
+    id: 4,
+    question: "What traditional food from another country do you like?",
+    placeholder: "Describe a foreign dish you enjoy..."
+  },
+  {
+    id: 5,
+    question: "Do you want to visit Germany or Italy? Why?",
+    placeholder: "Explain your choice and reasons..."
+  },
+  {
+    id: 6,
+    question: "Which language do you study at school besides Portuguese?",
+    placeholder: "Tell about your language studies at school..."
+  },
+  {
+    id: 7,
+    question: "What do you like to learn about different cultures?",
+    placeholder: "Describe cultural aspects that interest you..."
+  },
+  {
+    id: 8,
+    question: "Do you want to speak French with people from France?",
+    placeholder: "Share your thoughts about speaking with native speakers..."
+  },
+  {
+    id: 9,
+    question: 'How do you spell "Germany" in English?',
+    placeholder: "Spell the country name..."
+  },
+  {
+    id: 10,
+    question: 'How do you spell "Italy" in English?',
+    placeholder: "Spell the country name..."
+  }
+];
+
+// Sistema de avaliação de respostas
+const checkAnswer = (userAnswer: string, correctAnswer: string): boolean => {
+  const normalize = (text: string) => 
+    text.toLowerCase().trim().replace(/[.,?!]/g, '');
+  
+  return normalize(userAnswer) === normalize(correctAnswer);
+};
+
+interface AudioPlayerProps {
+  src: string;
+  compact?: boolean;
+}
+
+const AudioPlayer = ({ src, compact = false }: AudioPlayerProps) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current || new Audio(src);
+    if (!audioRef.current) audioRef.current = audio;
+    else audio.src = src;
+
+    const updateProgress = () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setProgress(100);
+    };
+
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateProgress);
+      audio.removeEventListener("ended", handleEnded);
+      audio.pause();
+    };
+  }, [src]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => console.error("Audio error:", err));
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const resetAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlaying(false);
+      setProgress(0);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !progressBarRef.current) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const width = rect.width;
+    const percent = offsetX / width;
+    audio.currentTime = percent * audio.duration;
+    setProgress(percent * 100);
+  };
+
+  return (
+    <div className={`flex items-center gap-2 ${compact ? "ml-2" : ""}`}>
+      <button 
+        onClick={togglePlayPause} 
+        className={`${compact ? "p-1" : "p-2"} bg-blue-500 text-white rounded-full hover:bg-blue-600`}
+      >
+        {isPlaying ? <Pause size={compact ? 12 : 16} /> : <Play size={compact ? 12 : 16} />}
+      </button>
+      <button 
+        onClick={resetAudio} 
+        className={`${compact ? "p-1" : "p-2"} bg-gray-500 text-white rounded-full hover:bg-gray-600`}
+      >
+        <RotateCcw size={compact ? 12 : 16} />
+      </button>
+      
+      {!compact && (
+        <div 
+          ref={progressBarRef}
+          className="w-20 h-1 bg-gray-300 rounded-full overflow-hidden cursor-pointer"
+          onClick={handleProgressClick}
+        >
+          <div 
+            className="h-full bg-blue-500 transition-all duration-200" 
+            style={{ width: `${progress}%` }} 
+          />
+        </div>
+      )}
+      
+      <audio ref={audioRef} src={src} preload="auto" />
+    </div>
+  );
+};
+
+const SimpleAudioPlayer = ({ src }: { src: string }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(err => console.error("Error playing audio:", err));
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={playAudio}
+        className="p-1 bg-green-500 text-white rounded-full hover:bg-green-600"
+      >
+        <Volume2 size={14} />
+      </button>
+      <audio ref={audioRef} src={src} preload="none" />
+    </div>
+  );
+};
+
+// Componente para destaque de palavras
+const HighlightedText = ({ text, highlightedWords }: { text: string; highlightedWords: string[] }) => {
+  const words = text.split(' ');
+  
+  return (
+    <p className="text-gray-800">
+      {words.map((word, index) => {
+        const cleanWord = word.replace('?', '').replace('!', '').replace('.', '').replace('"', '');
+        const isHighlighted = highlightedWords.includes(cleanWord);
+        
+        return (
+          <span
+            key={index}
+            className={isHighlighted ? "text-red-600 font-semibold" : ""}
+          >
+            {word}
+            {index < words.length - 1 ? ' ' : ''}
+          </span>
+        );
+      })}
+    </p>
+  );
+};
+
+// Componente para mostrar resultado da avaliação
+const AnswerResult = ({ isCorrect, correctAnswer }: { isCorrect: boolean; correctAnswer: string }) => {
+  if (isCorrect) {
+    return (
+      <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md">
+        <Check size={16} className="text-green-600" />
+        <span className="text-sm text-green-700 font-medium">Correct!</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md">
+      <XCircle size={16} className="text-red-600" />
+      <span className="text-sm text-red-700">
+        <span className="font-medium">Expected:</span> {correctAnswer}
+      </span>
+    </div>
+  );
+};
+
+export default function LessonLanguagesAndCountries() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Estados para controle de expansão/recolhimento das seções
+  const [sections, setSections] = useState({
+    speakNow: true,
+    substitution1: true,
+    negative: true,
+    substitution2: true,
+    affirmative: true,
+    interrogative: true,
+    questions: true
+  });
+
+  // Estados para as imagens selecionadas
+  const [selectedFlag, setSelectedFlag] = useState("/images/german-flag.jpg");
+  const [selectedFood, setSelectedFood] = useState("/images/juice-glass.jpg");
+  
+  // Estados para as práticas de substituição
+  const [subs1Exercises, setSubs1Exercises] = useState(substitutionPractice1);
+  const [subs2Exercises, setSubs2Exercises] = useState(substitutionPractice2);
+  
+  // Estados para as respostas escritas
+  const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>({});
+  
+  // Estados para avaliação de respostas
+  const [answerResults, setAnswerResults] = useState<Record<string, boolean>>({});
+  const [showAnswerResults, setShowAnswerResults] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+        
+        // Carregar respostas salvas
+        const answersRef = doc(db, "userLesson8Answers", user.uid);
+        const answersSnap = await getDoc(answersRef);
+        
+        if (answersSnap.exists()) {
+          const data = answersSnap.data();
+          setSubs1Exercises(data.subs1Exercises || substitutionPractice1);
+          setSubs2Exercises(data.subs2Exercises || substitutionPractice2);
+          setWrittenAnswers(data.writtenAnswers || {});
+        }
+      }
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  const saveAllAnswers = async () => {
+    if (userId) {
+      const answersRef = doc(db, "userLesson8Answers", userId);
+      await setDoc(answersRef, {
+        subs1Exercises,
+        subs2Exercises,
+        writtenAnswers,
+        lastUpdated: new Date()
+      });
+      alert("All answers saved successfully!");
+    }
+  };
+
+  // Funções para manipular as práticas de substituição
+  const handleSubs1OptionClick = (exerciseKey: string, optionIndex: number) => {
+    setSubs1Exercises(prev => 
+      prev.map(exercise => 
+        exercise.key === exerciseKey 
+          ? { ...exercise, currentIndex: optionIndex }
+          : exercise
+      )
+    );
+  };
+
+  const handleSubs2OptionClick = (exerciseKey: string, optionIndex: number) => {
+    setSubs2Exercises(prev => 
+      prev.map(exercise => 
+        exercise.key === exerciseKey 
+          ? { ...exercise, currentIndex: optionIndex }
+          : exercise
+      )
+    );
+  };
+
+  const handleWrittenAnswerChange = (key: string, value: string) => {
+    setWrittenAnswers(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Função para verificar respostas
+  const handleCheckAnswer = (exerciseKey: string, userAnswer: string, correctAnswer: string) => {
+    const isCorrect = checkAnswer(userAnswer, correctAnswer);
+    setAnswerResults(prev => ({ ...prev, [exerciseKey]: isCorrect }));
+    setShowAnswerResults(prev => ({ ...prev, [exerciseKey]: true }));
+  };
+
+  // Função para alternar expansão de seções
+  const toggleSection = (section: keyof typeof sections) => {
+    setSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Array de bandeiras para a galeria
+  const flagImages = [
+    "/images/german-flag.jpg",
+    "/images/brazil-flag.jpg", 
+    "/images/french-flag.jpg",
+    "/images/spanish-flag.jpg",
+    "/images/uk-flag.jpg",
+    "/images/italian-flag.jpg"
+  ];
+
+  const foodImages = [
+    "/images/german-food.jpg",
+    "/images/italian-food.jpg",
+    "/images/french-food.jpg", 
+    "/images/spanish-food.jpg",
+    "/images/british-food.jpg",
+    "/images/international-food.jpg"
+  ];
+
+  // Diálogos com palavras destacadas - atualizados para países
+  const practiceDialogs = [
+    {
+      question: "Do you want to speak German or Italian with me?",
+      response: "I want to speak Italian with you.",
+      highlighted: ["German", "Italian", "Italian"]
+    },
+    {
+      question: "How do you spell 'Germany'?",
+      response: "G-E-R-M-A-N-Y",
+      highlighted: ["Germany", "G", "E", "R", "M", "A", "N", "Y"]
+    }
+  ];
+
+  return (
+    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/world-map-bg.jpg')` }}>
+      <div className="max-w-5xl mx-auto bg-white bg-opacity-95 rounded-[40px] p-10 shadow-lg">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">🌍 Lesson 8 – Languages and Countries</h1>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            Practice speaking about languages, countries, and international communication. Improve your grammar skills with diverse pronouns.
+          </p>
+        </div>
+
+        {/* SPEAK RIGHT NOW */}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-blue-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🗣️ SPEAK RIGHT NOW</h2>
+              <button 
+                onClick={() => toggleSection('speakNow')}
+                className="ml-4 p-2 rounded-full hover:bg-blue-600 transition"
+              >
+                {sections.speakNow ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.speakNow && (
+            <div className="p-8">
+              {/* Galeria de Bandeiras */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Flags - Click to select</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  {flagImages.map((src, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative h-32 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-4 ${
+                        selectedFlag === src ? 'border-blue-500' : 'border-transparent'
+                      }`}
+                      onClick={() => setSelectedFlag(src)}
+                    >
+                      <Image 
+                        src={src} 
+                        alt={`Flag ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diálogos de Prática */}
+              <div className="space-y-6 mb-8">
+                <div className="bg-white p-6 rounded-xl border-2 border-blue-200 shadow-md">
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="w-full md:w-48 h-48 relative">
+                      <Image 
+                        src={selectedFlag} 
+                        alt="Selected flag" 
+                        fill
+                        className="rounded-lg object-cover border-2 border-blue-300"
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Practice this dialogue about languages:</p>
+                        <div className="space-y-2">
+                          <HighlightedText 
+                            text={practiceDialogs[0].question} 
+                            highlightedWords={practiceDialogs[0].highlighted} 
+                          />
+                          <HighlightedText 
+                            text={practiceDialogs[0].response} 
+                            highlightedWords={practiceDialogs[0].highlighted} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl border-2 border-blue-200 shadow-md">
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="w-full md:w-48 h-48 relative">
+                      <Image 
+                        src={selectedFood} 
+                        alt="Selected food" 
+                        fill
+                        className="rounded-lg object-cover border-2 border-blue-300"
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Practice spelling country names:</p>
+                        <div className="space-y-2">
+                          <HighlightedText 
+                            text={practiceDialogs[1].question} 
+                            highlightedWords={practiceDialogs[1].highlighted} 
+                          />
+                          <HighlightedText 
+                            text={practiceDialogs[1].response} 
+                            highlightedWords={practiceDialogs[1].highlighted} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Galeria de Comidas Internacionais */}
+              <div>
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🍽️ International Foods - Click to select</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {foodImages.map((src, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative h-32 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-4 ${
+                        selectedFood === src ? 'border-blue-500' : 'border-transparent'
+                      }`}
+                      onClick={() => setSelectedFood(src)}
+                    >
+                      <Image 
+                        src={src} 
+                        alt={`Food ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SUBSTITUTION PRACTICE 1 */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-green-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🔄 SUBSTITUTION PRACTICE I</h2>
+              <button 
+                onClick={() => toggleSection('substitution1')}
+                className="ml-4 p-2 rounded-full hover:bg-green-600 transition"
+              >
+                {sections.substitution1 ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.substitution1 && (
+            <div className="p-8">
+              <div className="bg-green-100 border-2 border-green-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">
+                  ✍️ Substitution Practice I – 3' - Click on the options to change the sentences:
+                </h3>
+                
+                <div className="space-y-6">
+                  {subs1Exercises.map((exercise) => {
+                    const currentSentence = exercise.base.replace('{0}', exercise.options[exercise.currentIndex]);
+                    
+                    return (
+                      <div key={exercise.key} className="bg-white p-4 rounded-lg border border-green-200">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+                          <p className="font-medium text-gray-700 flex-1">
+                            <span className="text-green-600">{exercise.original}</span>
+                          </p>
+                        </div>
+                        
+                        <div className="mb-3 p-3 bg-green-50 rounded-md">
+                          <p className="text-green-700 font-medium">{currentSentence}</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {exercise.options.map((option, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSubs1OptionClick(exercise.key, index)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                                exercise.currentIndex === index
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO NEGATIVE */}
+        <div className="bg-red-50 border-2 border-red-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-red-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">➖ CHANGE INTO NEGATIVE</h2>
+              <button 
+                onClick={() => toggleSection('negative')}
+                className="ml-4 p-2 rounded-full hover:bg-red-600 transition"
+              >
+                {sections.negative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.negative && (
+            <div className="p-8">
+              <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-red-800 mb-4">
+                  ⛔ Change into Negative – 2' - Transform to negative:
+                </h3>
+                
+                <div className="space-y-4">
+                  {negativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-red-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write negative form..."
+                          value={writtenAnswers[exercise.key] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(exercise.key, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-red-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(exercise.key, writtenAnswers[exercise.key] || "", exercise.answer)}
+                          className="bg-red-500 text-white py-2 px-3 rounded-md hover:bg-red-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[exercise.key] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[exercise.key]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SUBSTITUTION PRACTICE 2 */}
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-purple-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🔄 SUBSTITUTION PRACTICE II</h2>
+              <button 
+                onClick={() => toggleSection('substitution2')}
+                className="ml-4 p-2 rounded-full hover:bg-purple-600 transition"
+              >
+                {sections.substitution2 ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.substitution2 && (
+            <div className="p-8">
+              <div className="bg-purple-100 border-2 border-purple-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-purple-800 mb-4">
+                  🔄 Substitution Practice II – 3' - Click to substitute:
+                </h3>
+                
+                <div className="space-y-6">
+                  {subs2Exercises.map((exercise) => {
+                    const baseSentence = exercise.correctAnswer.split(' ').map(word => {
+                      const cleanWord = word.replace('.', '').replace('?', '');
+                      return exercise.options.includes(cleanWord) ? '{0}' : word;
+                    }).join(' ');
+                    
+                    const currentSentence = baseSentence.replace('{0}', exercise.options[exercise.currentIndex]);
+                    
+                    return (
+                      <div key={exercise.key} className="bg-white p-4 rounded-lg border border-purple-200">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+                          <p className="font-medium text-gray-700 flex-1">
+                            <span className="text-purple-600">{exercise.original}</span>
+                          </p>
+                        </div>
+                        
+                        <div className="mb-3 p-3 bg-purple-50 rounded-md">
+                          <p className="text-purple-700 font-medium">{currentSentence}</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {exercise.options.map((option, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSubs2OptionClick(exercise.key, index)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                                exercise.currentIndex === index
+                                  ? 'bg-purple-500 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO AFFIRMATIVE */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">➕ CHANGE INTO AFFIRMATIVE</h2>
+              <button 
+                onClick={() => toggleSection('affirmative')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.affirmative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.affirmative && (
+            <div className="p-8">
+              <div className="bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">
+                  Change into Affirmative - 2' - Transform to affirmative:
+                </h3>
+                
+                <div className="space-y-4">
+                  {affirmativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-teal-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write affirmative form..."
+                          value={writtenAnswers[`aff-${exercise.key}`] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(`aff-${exercise.key}`, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-teal-300 rounded-md text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(`aff-${exercise.key}`, writtenAnswers[`aff-${exercise.key}`] || "", exercise.answer)}
+                          className="bg-teal-500 text-white py-2 px-3 rounded-md hover:bg-teal-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[`aff-${exercise.key}`] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[`aff-${exercise.key}`]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO INTERROGATIVE */}
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-orange-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">❓ CHANGE INTO INTERROGATIVE</h2>
+              <button 
+                onClick={() => toggleSection('interrogative')}
+                className="ml-4 p-2 rounded-full hover:bg-orange-600 transition"
+              >
+                {sections.interrogative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.interrogative && (
+            <div className="p-8">
+              <div className="bg-orange-100 border-2 border-orange-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-orange-800 mb-4">
+                  Change into Interrogative - 2' - Transform to questions:
+                </h3>
+                
+                <div className="space-y-4">
+                  {interrogativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-orange-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write question form..."
+                          value={writtenAnswers[`int-${exercise.key}`] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(`int-${exercise.key}`, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(`int-${exercise.key}`, writtenAnswers[`int-${exercise.key}`] || "", exercise.answer)}
+                          className="bg-orange-500 text-white py-2 px-3 rounded-md hover:bg-orange-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[`int-${exercise.key}`] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[`int-${exercise.key}`]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* QUESTIONS */}
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+          <div className="bg-indigo-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">💬 QUESTIONS ABOUT LANGUAGES & COUNTRIES</h2>
+              <button 
+                onClick={() => toggleSection('questions')}
+                className="ml-4 p-2 rounded-full hover:bg-indigo-600 transition"
+              >
+                {sections.questions ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.questions && (
+            <div className="p-8">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4">
+                  Answer these personal questions about languages and countries:
+                </h3>
+                <p className="text-indigo-600 mb-6">
+                  Practice writing about your international experiences and language preferences.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {personalQuestions.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-indigo-200 shadow-md">
+                    <h4 className="text-lg font-bold text-indigo-700 mb-3">
+                      {question.question}
+                    </h4>
+                    
+                    <textarea
+                      value={writtenAnswers[`q-${question.id}`] || ""}
+                      onChange={(e) => handleWrittenAnswerChange(`q-${question.id}`, e.target.value)}
+                      placeholder={question.placeholder}
+                      className="w-full h-24 p-3 border border-indigo-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4">💡 Writing Tips for International Topics:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-indigo-700 text-sm">
+                  <li>Use specific country names and language names in your answers</li>
+                  <li>Practice using different pronouns: he, she, they, we</li>
+                  <li>Describe cultural differences and similarities</li>
+                  <li>Mention traditional foods from different countries</li>
+                  <li>Talk about your language learning experiences</li>
+                  <li>Save your answers to track your progress in international communication</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Save Button and Navigation */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-8">
+          <button
+            onClick={saveAllAnswers}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+          >
+            💾 Save All My Answers
+          </button>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => router.push("/cursos/lesson7")}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+            >
+              &larr; Previous Lesson
+            </button>
+            <button
+              onClick={() => router.push("/cursos/lesson9")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+            >
+              Next Lesson &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -12,13 +12,67 @@ export default function ReviewLessonFoodDrink() {
   const [ratings, setRatings] = useState<number[]>([2, 2, 2, 2, 2, 2, 2, 2, 2]);
 
   const playAudio = (word: string) => {
+    console.log("Tentando reproduzir áudio para:", word);
+    
+    // Mapeamento completo de áudios do GitHub
+    const audioMap: { [key: string]: string } = {
+      "I eat bread and butter.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-eat-bread-and-butter.mp3",
+      "She drinks coffee with milk.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/she-drinks-coffee-with-milk.mp3",
+      "He likes crackers.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-likes-crackers.mp3",
+      "You like to eat granola.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-like-to-eat-granola.mp3",
+      "It tastes good.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/it-tastes-good.mp",
+      "I want to drink coffee.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-want-to-drink-coffee.mp3",
+      "He prefers yogurt.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-prefers-yogurt.mp3",
+      "She prefers to eat eggs.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/she-prefers-to-eat-eggs.mp3",
+      "You don't eat chicken.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-don't-eat-chicken.mp3",
+      "I don't drink milk.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-don't-drink-milk.mp3",
+      "He doesn't like honey.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-doesn't-like honey.mp3",
+      "She drinks juice for breakfast.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/she-drinks-juice-for-breakfas@.mp3",
+      "You don't want to eat chicken for lunch.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-dont-want-to-eat-chicken-for-lunch.mp3",
+      "He wants to eat beef and salad for dinner.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-wants-to-eat-beef-and-salad-for-dinner.mp3",
+      "She wants a slice of apple pie, please.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/she-wants-a-slice-of-apple-pie-please.mp3",
+      "You want to drink a cup of coffee.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-want-to-drink-a-cup-of-coffee.mp3",
+      "He doesn't want a glass of water, thanks.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-doesnt-want-a-glass-of-water-thanks.mp3",
+      "Do you like pancakes?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/do-you-like-pancakes.mp3",
+      "Does she like to eat vegetables?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/does-she-like-to-eat-vegetables.mp3.mp3",
+      "Does he want to drink soda?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/does-he-want-to-drink-soda.mp3",
+      "What do you eat for breakfast?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/what-do-you-eat-for-breakfast.mp3",
+      "What does she like to drink?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/what-does-she-like-to-drink.mp3",
+      "Yes, I do.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/yes-i-do.mp3",
+      "No, I don't.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/no-i-dont.mp3",
+      "He loves rice and beans. And you?": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-loves-rice-and-beans-and you.mp3",
+      "She likes to eat tomatoes.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/she-likes-to-eat-tomatoes.mp3",
+      "You want to eat chocolate cookies.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-want-to-eat-chocolate-cookies.mp3",
+      "He doesn't want orange juice.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/he-doesnt-want-orange-juice.mp3",
+      "Good morning.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/good-morning.mp3",
+      "Good afternoon.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/good-afternoon.mp3",
+      "Good evening.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/good-evening.mp3",
+      "Good night.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/good-night.mp3",
+      "See you later.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/see-you-later.mp3",
+      "Bye. See you.": "https://raw.githubusercontent.com/Sullivan-code/english-audios/main/bye-see-you.mp3"
+    };
+
+    // Verifica se existe um áudio específico para esta frase EXATA
+    const audioUrl = audioMap[word];
+    
+    if (audioUrl) {
+      console.log("Usando áudio específico:", audioUrl);
+      // Adiciona timestamp para evitar cache
+      const uniqueUrl = audioUrl + '?t=' + Date.now();
+      const audio = new Audio(uniqueUrl);
+      audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
+      return;
+    }
+
+    // Comportamento padrão para outros áudios (fallback)
+    console.log("Usando áudio padrão para:", word);
     const formattedWord = word
       .toLowerCase()
       .replace(/\s+/g, '_')
       .replace(/[^\w\s]/g, '');
-    
-    const audio = new Audio(`/audios/${formattedWord}.mp3`);
-    audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
+
+    const defaultAudio = new Audio(`/audios/${formattedWord}.mp3?t=${Date.now()}`);
+    defaultAudio.play().catch(e => console.error("Erro ao reproduzir áudio padrão:", e));
   };
 
   const handleRatingClick = (index: number, rating: number) => {
@@ -57,20 +111,17 @@ export default function ReviewLessonFoodDrink() {
         { english: "She wants a slice of apple pie, please.", portuguese: "Ela quer uma fatia de torta de maçã, por favor" },
         { english: "You want to drink a cup of coffee.", portuguese: "Você quer beber uma xícara de café" },
         { english: "He doesn't want a glass of water, thanks.", portuguese: "Ele não quer um copo de água, obrigado" },
-        // Questions from conversation section
         { english: "Do you like pancakes?", portuguese: "Você gosta de panquecas?" },
         { english: "Does she like to eat vegetables?", portuguese: "Ela gosta de comer legumes?" },
         { english: "Does he want to drink soda?", portuguese: "Ele quer beber refrigerante?" },
         { english: "What do you eat for breakfast?", portuguese: "O que você come no café da manhã?" },
         { english: "What does she like to drink?", portuguese: "O que ela gosta de beber?" },
-        // Answers from conversation section
         { english: "Yes, I do.", portuguese: "Sim, eu gosto." },
         { english: "No, I don't.", portuguese: "Não, eu não gosto." },
         { english: "He loves rice and beans. And you?", portuguese: "Ele ama arroz e feijão. E você?" },
         { english: "She likes to eat tomatoes.", portuguese: "Ela gosta de comer tomates." },
         { english: "You want to eat chocolate cookies.", portuguese: "Você quer comer biscoitos de chocolate." },
         { english: "He doesn't want orange juice.", portuguese: "Ele não quer suco de laranja." },
-        // Greetings from conversation section
         { english: "Good morning.", portuguese: "Bom dia." },
         { english: "Good afternoon.", portuguese: "Boa tarde." },
         { english: "Good evening.", portuguese: "Boa noite." },
@@ -110,10 +161,11 @@ export default function ReviewLessonFoodDrink() {
             </p>
             <div className="w-48 h-48 mx-auto relative">
               <Image
-                src="/images/review-food-drink.jpg"
+                src="https://i.ibb.co/BHzD06DX/review-main.jpg"
                 alt="Food and Drink Review"
                 fill
                 className="rounded-2xl object-cover shadow-lg"
+                unoptimized
               />
             </div>
           </div>
