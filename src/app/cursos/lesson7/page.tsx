@@ -22,13 +22,78 @@ export default function LessonLanguagesAndCountries() {
   };
 
   const playAudio = (word: string) => {
-    const formattedWord = word
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w\s]/g, '');
-    
-    const audio = new Audio(`https://drive.google.com/uc?export=download&id=YOUR_AUDIO_ID_${formattedWord}`);
-    audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
+    // Mapeamento completo com links RAW do GitHub
+    const audioMap: { [key: string]: string } = {
+      // Verbos
+      'to speak': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/to-speak.mp3',
+      'to study': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/to-study.mp3',
+      
+      // Idiomas
+      'Portuguese': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/portuguese.mp3',
+      'English': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/english.mp3',
+      'French': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/french.mp3',
+      'Spanish': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/spanish.mp3',
+      'Italian': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/italian.mp3',
+      'German': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/german.mp3',
+      
+      // Palavras comuns
+      'friend': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/friend.mp3',
+      'teacher': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/teacher.mp3',
+      'my': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/my.mp3',
+      'your': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/your.mp3',
+      'we': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/we.mp3',
+      'they': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/they.mp3',
+      'here': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/here.mp3',
+      'there': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/there.mp3',
+      'too': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/too.mp3',
+      'with': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/with.mp3',
+      'with me': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/with-me.mp3',
+      'in the morning': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/in-the-morning.mp3',
+      'in the afternoon': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/in-the-afternoon.mp3',
+      
+      // Frases úteis
+      'I drink coffee in the morning': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-drink-coffee-in-the-morning.mp3',
+      'You study English in the afternoon': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/you-study-english-in-the-afternoon.mp3',
+      'I study English at school': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-study-english-at-school.mp3',
+      'Do you want to study with me': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/do-you-want-to-study-with-me.mp3',
+      
+      // Gramática
+      'We speak Italian at school': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/we-speak-italian-at-school.mp3',
+      'We study Spanish here too': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/we-study-spanish-here-too.mp3',
+      'They study French there': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/they-study-french-there.mp3',
+      'They want to study here': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/they-want-to-study-here.mp3',
+      'We want to speak English': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/we-want-to-speak-english.mp3',
+      'They want to study German': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/they-want-to-study-german.mp3',
+      
+      // Frases do Real Life
+      'I like to speak English with my friends': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/I-like-to-speak-english-with-my-friends.mp3',
+      'They speak Spanish at school': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/theyy-speak-spanish-at-school.mp3',
+      'They like to study Portuguese': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/they-like-to-study-portuguese.mp3',
+      'Do you study here or there': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/do-you-study-here-or-there.mp3',
+      'Do you speak German with your teacher': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/do-you-speak-german-with-your-teacher.mp3',
+      'I speak Italian with my friend': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/i-speak-italian-with-my-friend.mp3',
+      'We want to study in the morning': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/we-want-to-study-in-the-morning.mp3',
+      'Do you want to study in the afternoon': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/do-you-want-to-study-in-the-afternoon.mp3',
+      
+      // Despedidas
+      'bye_see_you': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/bye-see-you.mp3',
+      'see_you_later': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/see-you-later.mp3',
+      'good_night': 'https://raw.githubusercontent.com/Sullivan-code/english-audios/main/good-night.mp3'
+    };
+
+    // Verifica se existe áudio mapeado
+    if (audioMap[word]) {
+      const audio = new Audio(audioMap[word]);
+      audio.play().catch(e => {
+        console.error("Erro ao reproduzir áudio:", e);
+        // Fallback: tenta recarregar o áudio
+        audio.load();
+        audio.play().catch(e2 => console.error("Erro no fallback:", e2));
+      });
+      return;
+    }
+
+    console.warn(`Áudio não encontrado para: ${word}`);
   };
 
   return (
@@ -530,7 +595,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -553,7 +618,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -576,7 +641,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -599,7 +664,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -622,7 +687,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -645,7 +710,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>
@@ -668,7 +733,7 @@ export default function LessonLanguagesAndCountries() {
                         aria-label="Play audio"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 a1 1 0 010-1.415z" clipRule="evenodd" />
                         </svg>
                       </button>
                       <div>

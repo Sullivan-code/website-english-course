@@ -361,7 +361,15 @@ const SimpleAudioPlayer = ({ src }: { src: string }) => {
 };
 
 // Componente para destaque de palavras
-const HighlightedText = ({ text, highlightedWords }: { text: string; highlightedWords: string[] }) => {
+const HighlightedText = ({ 
+  text, 
+  highlightedWords, 
+  onWordClick 
+}: { 
+  text: string; 
+  highlightedWords: string[];
+  onWordClick?: (word: string) => void;
+}) => {
   const words = text.split(' ');
   
   return (
@@ -373,7 +381,8 @@ const HighlightedText = ({ text, highlightedWords }: { text: string; highlighted
         return (
           <span
             key={index}
-            className={isHighlighted ? "text-red-600 font-semibold" : ""}
+            className={isHighlighted ? "text-red-600 font-semibold cursor-pointer hover:bg-yellow-100 px-1 rounded" : ""}
+            onClick={isHighlighted && onWordClick ? () => onWordClick(cleanWord) : undefined}
           >
             {word}
             {index < words.length - 1 ? ' ' : ''}
@@ -405,6 +414,79 @@ const AnswerResult = ({ isCorrect, correctAnswer }: { isCorrect: boolean; correc
   );
 };
 
+// Mapeamento de países para idiomas
+const countryLanguageMap: Record<string, { language: string; spelling: string; audioSrc: string }> = {
+  "https://i.ibb.co/NdZwZ44m/german-flag.jpg": {
+    language: "German",
+    spelling: "G-E-R-M-A-N-Y",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/german.mp3"
+  },
+  "https://i.ibb.co/TBJWVfPc/brazilian-flag.jpg": {
+    language: "Portuguese", 
+    spelling: "B-R-A-Z-I-L",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/portuguese.mp3"
+  },
+  "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg": {
+    language: "Spanish",
+    spelling: "M-E-X-I-C-O", 
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
+  },
+  "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg": {
+    language: "Spanish",
+    spelling: "S-P-A-I-N",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
+  },
+  "https://i.ibb.co/4ZLRHg2y/american-flag.jpg": {
+    language: "English",
+    spelling: "U-N-I-T-E-D S-T-A-T-E-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/english.mp3"
+  },
+  "https://i.ibb.co/JM5NJQp/italian-flag.jpg": {
+    language: "Italian",
+    spelling: "I-T-A-L-Y",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/italian.mp3"
+  },
+  "https://i.ibb.co/DPT3wDXr/australian-flag.jpg": {
+    language: "English",
+    spelling: "A-U-S-T-R-A-L-I-A",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/english.mp3"
+  }
+};
+
+// Mapeamento de comidas para países
+const foodCountryMap: Record<string, { country: string; food: string; audioSrc: string }> = {
+  "https://i.ibb.co/NdZwZ44m/german-flag.jpg": {
+    country: "Germany",
+    food: "sausages",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/sausages.mp3"
+  },
+  "https://i.ibb.co/JM5NJQp/italian-flag.jpg": {
+    country: "Italy", 
+    food: "pizza",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/pizza.mp3"
+  },
+  "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg": {
+    country: "Mexico",
+    food: "tacos",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/tacos.mp3"
+  },
+  "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg": {
+    country: "Spain",
+    food: "paella",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/paella.mp3"
+  },
+  "https://i.ibb.co/4ZLRHg2y/american-flag.jpg": {
+    country: "United States",
+    food: "hamburger",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/hamburger.mp3"
+  },
+  "https://i.ibb.co/DPT3wDXr/australian-flag.jpg": {
+    country: "Australia",
+    food: "meat pie",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/meat_pie.mp3"
+  }
+};
+
 export default function LessonLanguagesAndCountries() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -421,8 +503,8 @@ export default function LessonLanguagesAndCountries() {
   });
 
   // Estados para as imagens selecionadas
-  const [selectedFlag, setSelectedFlag] = useState("/images/german-flag.jpg");
-  const [selectedFood, setSelectedFood] = useState("/images/juice-glass.jpg");
+  const [selectedFlag, setSelectedFlag] = useState("https://i.ibb.co/NdZwZ44m/german-flag.jpg");
+  const [selectedFood, setSelectedFood] = useState("https://i.ibb.co/NdZwZ44m/german-flag.jpg");
   
   // Estados para as práticas de substituição
   const [subs1Exercises, setSubs1Exercises] = useState(substitutionPractice1);
@@ -434,6 +516,20 @@ export default function LessonLanguagesAndCountries() {
   // Estados para avaliação de respostas
   const [answerResults, setAnswerResults] = useState<Record<string, boolean>>({});
   const [showAnswerResults, setShowAnswerResults] = useState<Record<string, boolean>>({});
+
+  // Estado para diálogos dinâmicos baseados na seleção
+  const [practiceDialogs, setPracticeDialogs] = useState([
+    {
+      question: "Do you want to speak German or Italian with me?",
+      response: "I want to speak Italian with you.",
+      highlighted: ["German", "Italian", "Italian"]
+    },
+    {
+      question: "How do you spell 'Germany'?",
+      response: "G-E-R-M-A-N-Y",
+      highlighted: ["Germany", "G", "E", "R", "M", "A", "N", "Y"]
+    }
+  ]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -455,6 +551,40 @@ export default function LessonLanguagesAndCountries() {
     
     return () => unsubscribe();
   }, []);
+
+  // Atualizar diálogos quando a bandeira for selecionada
+  useEffect(() => {
+    const countryInfo = countryLanguageMap[selectedFlag];
+    if (countryInfo) {
+      setPracticeDialogs([
+        {
+          question: `Do you want to speak ${countryInfo.language} or Italian with me?`,
+          response: `I want to speak ${countryInfo.language} with you.`,
+          highlighted: [countryInfo.language, "Italian", countryInfo.language]
+        },
+        {
+          question: `How do you spell '${getCountryName(countryInfo.language)}'?`,
+          response: countryInfo.spelling,
+          highlighted: [
+            getCountryName(countryInfo.language),
+            ...countryInfo.spelling.split('-')
+          ]
+        }
+      ]);
+    }
+  }, [selectedFlag]);
+
+  // Função auxiliar para obter o nome do país baseado no idioma
+  const getCountryName = (language: string): string => {
+    const countryMap: Record<string, string> = {
+      "German": "Germany",
+      "Portuguese": "Brazil", 
+      "Spanish": "Mexico",
+      "Italian": "Italy",
+      "English": "United States"
+    };
+    return countryMap[language] || language;
+  };
 
   const saveAllAnswers = async () => {
     if (userId) {
@@ -501,6 +631,39 @@ export default function LessonLanguagesAndCountries() {
     setShowAnswerResults(prev => ({ ...prev, [exerciseKey]: true }));
   };
 
+  // Função para tocar áudio quando palavras são clicadas
+  const handleWordClick = (word: string) => {
+    // Buscar o áudio correspondente à palavra
+    const audioSrc = getAudioForWord(word);
+    if (audioSrc) {
+      const audio = new Audio(audioSrc);
+      audio.play().catch(err => console.error("Error playing word audio:", err));
+    }
+  };
+
+  // Função auxiliar para obter áudio baseado na palavra
+  const getAudioForWord = (word: string): string | null => {
+    // Verificar se é um idioma
+    const countryEntry = Object.values(countryLanguageMap).find(
+      info => info.language.toLowerCase() === word.toLowerCase()
+    );
+    if (countryEntry) return countryEntry.audioSrc;
+
+    // Verificar se é um país
+    const countrySpelling = Object.values(countryLanguageMap).find(
+      info => info.spelling.replace(/-/g, '') === word.toUpperCase()
+    );
+    if (countrySpelling) return countrySpelling.audioSrc;
+
+    // Verificar se é uma comida
+    const foodEntry = Object.values(foodCountryMap).find(
+      info => info.food.toLowerCase() === word.toLowerCase()
+    );
+    if (foodEntry) return foodEntry.audioSrc;
+
+    return null;
+  };
+
   // Função para alternar expansão de seções
   const toggleSection = (section: keyof typeof sections) => {
     setSections(prev => ({
@@ -509,37 +672,24 @@ export default function LessonLanguagesAndCountries() {
     }));
   };
 
-  // Array de bandeiras para a galeria
+  // Array de bandeiras para a galeria - URLs OTIMIZADAS
   const flagImages = [
-    "/images/german-flag.jpg",
-    "/images/brazil-flag.jpg", 
-    "/images/french-flag.jpg",
-    "/images/spanish-flag.jpg",
-    "/images/uk-flag.jpg",
-    "/images/italian-flag.jpg"
+    "https://i.ibb.co/NdZwZ44m/german-flag.jpg",
+    "https://i.ibb.co/TBJWVfPc/brazilian-flag.jpg", 
+    "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg",
+    "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg",
+    "https://i.ibb.co/4ZLRHg2y/american-flag.jpg",
+    "https://i.ibb.co/JM5NJQp/italian-flag.jpg",
+    "https://i.ibb.co/DPT3wDXr/australian-flag.jpg"
   ];
 
   const foodImages = [
-    "/images/german-food.jpg",
-    "/images/italian-food.jpg",
-    "/images/french-food.jpg", 
-    "/images/spanish-food.jpg",
-    "/images/british-food.jpg",
-    "/images/international-food.jpg"
-  ];
-
-  // Diálogos com palavras destacadas - atualizados para países
-  const practiceDialogs = [
-    {
-      question: "Do you want to speak German or Italian with me?",
-      response: "I want to speak Italian with you.",
-      highlighted: ["German", "Italian", "Italian"]
-    },
-    {
-      question: "How do you spell 'Germany'?",
-      response: "G-E-R-M-A-N-Y",
-      highlighted: ["Germany", "G", "E", "R", "M", "A", "N", "Y"]
-    }
+    "https://i.ibb.co/NdZwZ44m/german-flag.jpg",
+    "https://i.ibb.co/JM5NJQp/italian-flag.jpg",
+    "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg",
+    "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg",
+    "https://i.ibb.co/4ZLRHg2y/american-flag.jpg",
+    "https://i.ibb.co/DPT3wDXr/australian-flag.jpg"
   ];
 
   return (
@@ -568,15 +718,15 @@ export default function LessonLanguagesAndCountries() {
 
           {sections.speakNow && (
             <div className="p-8">
-              {/* Galeria de Bandeiras */}
+              {/* Galeria de Bandeiras - TOTALMENTE OTIMIZADA */}
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Flags - Click to select</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Flags - Click to select and change language</h3>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
                   {flagImages.map((src, index) => (
                     <div 
                       key={index} 
-                      className={`relative h-32 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-4 ${
-                        selectedFlag === src ? 'border-blue-500' : 'border-transparent'
+                      className={`relative w-full aspect-[3/2] bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-3 transition-all duration-200 ${
+                        selectedFlag === src ? 'border-blue-500 shadow-md scale-105' : 'border-gray-300 hover:border-blue-300'
                       }`}
                       onClick={() => setSelectedFlag(src)}
                     >
@@ -585,66 +735,122 @@ export default function LessonLanguagesAndCountries() {
                         alt={`Flag ${index + 1}`}
                         fill
                         className="object-cover"
+                        quality={85}
+                        priority={index < 4}
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 14vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIGZpbGw9IiNmM2YzZjMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtc2l6ZT0iMTIiPkZsYWc8L3RleHQ+PC9zdmc+';
+                        }}
                       />
+                      <div className={`absolute inset-0 transition-opacity duration-200 ${
+                        selectedFlag === src ? 'bg-blue-500 bg-opacity-20' : 'bg-black bg-opacity-0 hover:bg-opacity-10'
+                      }`} />
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Diálogos de Prática */}
+              {/* Diálogos de Prática - LAYOUT OTIMIZADO */}
               <div className="space-y-6 mb-8">
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-200 shadow-md">
-                  <div className="flex flex-col md:flex-row gap-6 items-start">
-                    <div className="w-full md:w-48 h-48 relative">
-                      <Image 
-                        src={selectedFlag} 
-                        alt="Selected flag" 
-                        fill
-                        className="rounded-lg object-cover border-2 border-blue-300"
-                      />
+                <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    {/* Container de Imagem Reduzido */}
+                    <div className="w-full md:w-32 flex-shrink-0">
+                      <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
+                        selectedFlag === selectedFlag ? 'border-blue-400 shadow-md' : 'border-gray-300'
+                      }`}>
+                        <Image 
+                          src={selectedFlag} 
+                          alt="Selected flag" 
+                          fill
+                          className="object-cover"
+                          quality={90}
+                          priority
+                          sizes="128px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjNmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIxMiI+RmxhZzwvdGV4dD48L3N2Zz4=';
+                          }}
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex-1">
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Practice this dialogue about languages:</p>
-                        <div className="space-y-2">
-                          <HighlightedText 
-                            text={practiceDialogs[0].question} 
-                            highlightedWords={practiceDialogs[0].highlighted} 
-                          />
-                          <HighlightedText 
-                            text={practiceDialogs[0].response} 
-                            highlightedWords={practiceDialogs[0].highlighted} 
-                          />
+                    {/* Conteúdo do Diálogo */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Practice this dialogue about languages. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
+                        </p>
+                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-blue-700">Question:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[0].question} 
+                              highlightedWords={practiceDialogs[0].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-green-700">Response:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[0].response} 
+                              highlightedWords={practiceDialogs[0].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-200 shadow-md">
-                  <div className="flex flex-col md:flex-row gap-6 items-start">
-                    <div className="w-full md:w-48 h-48 relative">
-                      <Image 
-                        src={selectedFood} 
-                        alt="Selected food" 
-                        fill
-                        className="rounded-lg object-cover border-2 border-blue-300"
-                      />
+                <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    {/* Container de Imagem Reduzido */}
+                    <div className="w-full md:w-32 flex-shrink-0">
+                      <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
+                        selectedFood === selectedFood ? 'border-blue-400 shadow-md' : 'border-gray-300'
+                      }`}>
+                        <Image 
+                          src={selectedFood} 
+                          alt="Selected food" 
+                          fill
+                          className="object-cover"
+                          quality={90}
+                          priority
+                          sizes="128px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjNmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIxMiI+Rm9vZDwvdGV4dD48L3N2Zz4=';
+                          }}
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex-1">
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Practice spelling country names:</p>
-                        <div className="space-y-2">
-                          <HighlightedText 
-                            text={practiceDialogs[1].question} 
-                            highlightedWords={practiceDialogs[1].highlighted} 
-                          />
-                          <HighlightedText 
-                            text={practiceDialogs[1].response} 
-                            highlightedWords={practiceDialogs[1].highlighted} 
-                          />
+                    {/* Conteúdo do Diálogo */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Practice spelling country names. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
+                        </p>
+                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-blue-700">Question:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[1].question} 
+                              highlightedWords={practiceDialogs[1].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-green-700">Response:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[1].response} 
+                              highlightedWords={practiceDialogs[1].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -652,15 +858,15 @@ export default function LessonLanguagesAndCountries() {
                 </div>
               </div>
 
-              {/* Galeria de Comidas Internacionais */}
+              {/* Galeria de Comidas Internacionais - TOTALMENTE OTIMIZADA */}
               <div>
                 <h3 className="text-xl font-bold text-blue-800 mb-4">🍽️ International Foods - Click to select</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {foodImages.map((src, index) => (
                     <div 
                       key={index} 
-                      className={`relative h-32 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-4 ${
-                        selectedFood === src ? 'border-blue-500' : 'border-transparent'
+                      className={`relative w-full aspect-[3/2] bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-3 transition-all duration-200 ${
+                        selectedFood === src ? 'border-blue-500 shadow-md scale-105' : 'border-gray-300 hover:border-blue-300'
                       }`}
                       onClick={() => setSelectedFood(src)}
                     >
@@ -669,7 +875,16 @@ export default function LessonLanguagesAndCountries() {
                         alt={`Food ${index + 1}`}
                         fill
                         className="object-cover"
+                        quality={85}
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIGZpbGw9IiNmM2YzZjMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtc2l6ZT0iMTIiPkZvb2Q8L3RleHQ+PC9zdmc+';
+                        }}
                       />
+                      <div className={`absolute inset-0 transition-opacity duration-200 ${
+                        selectedFood === src ? 'bg-blue-500 bg-opacity-20' : 'bg-black bg-opacity-0 hover:bg-opacity-10'
+                      }`} />
                     </div>
                   ))}
                 </div>
