@@ -35,8 +35,8 @@ export default function LessonVerbsAndPlaces() {
     audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
   };
 
-  // URLs das imagens (placeholders - substitua por imagens reais)
-  const mainImage = "https://i.ibb.co/placeholder-image.jpg";
+  // URLs das imagens
+  const mainImage = "https://i.ibb.co/yFCBDfHp/people-moving-in.jpg";
   const cityImage = "https://i.ibb.co/placeholder-city.jpg";
   const countryImage = "https://i.ibb.co/placeholder-country.jpg";
 
@@ -44,7 +44,7 @@ export default function LessonVerbsAndPlaces() {
     <div
       className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
       style={{
-        backgroundImage: `url("/images/lesson-bg.jpg")`,
+        backgroundImage: `url("https://i.ibb.co/zW5DVx76/L9-BG.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -56,7 +56,7 @@ export default function LessonVerbsAndPlaces() {
         {/* Título centralizado com imagem abaixo */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">
-            VERBS — to live / morar, viver • to understand / entender
+            Lesson 9 - Languages & Countries
           </h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
             Aprenda a falar sobre onde mora e expressar compreensão em inglês. 🏠🌎
@@ -64,7 +64,7 @@ export default function LessonVerbsAndPlaces() {
           <div className="w-64 h-64 mx-auto">
             <img
               src={mainImage}
-              alt="Living and understanding"
+              alt="People moving in and understanding different cultures"
               className="w-full h-full object-cover rounded-2xl shadow-md"
             />
           </div>

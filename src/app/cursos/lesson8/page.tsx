@@ -416,74 +416,103 @@ const AnswerResult = ({ isCorrect, correctAnswer }: { isCorrect: boolean; correc
 
 // Mapeamento de países para idiomas
 const countryLanguageMap: Record<string, { language: string; spelling: string; audioSrc: string }> = {
-  "https://i.ibb.co/NdZwZ44m/german-flag.jpg": {
-    language: "German",
-    spelling: "G-E-R-M-A-N-Y",
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/german.mp3"
-  },
-  "https://i.ibb.co/TBJWVfPc/brazilian-flag.jpg": {
+  "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg": {
     language: "Portuguese", 
     spelling: "B-R-A-Z-I-L",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/portuguese.mp3"
   },
-  "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg": {
-    language: "Spanish",
-    spelling: "M-E-X-I-C-O", 
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
-  },
-  "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg": {
-    language: "Spanish",
-    spelling: "S-P-A-I-N",
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
-  },
-  "https://i.ibb.co/4ZLRHg2y/american-flag.jpg": {
-    language: "English",
-    spelling: "U-N-I-T-E-D S-T-A-T-E-S",
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/english.mp3"
-  },
-  "https://i.ibb.co/JM5NJQp/italian-flag.jpg": {
+  "https://i.ibb.co/7xnjGkDN/italian-flag.jpg": {
     language: "Italian",
     spelling: "I-T-A-L-Y",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/italian.mp3"
   },
-  "https://i.ibb.co/DPT3wDXr/australian-flag.jpg": {
+  "https://i.ibb.co/21VkwN19/spanish-fla.jpg": {
+    language: "Spanish",
+    spelling: "S-P-A-I-N",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
+  },
+  "https://i.ibb.co/kskr0zmq/german-flag.jpg": {
+    language: "German",
+    spelling: "G-E-R-M-A-N-Y",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/german.mp3"
+  },
+  "https://i.ibb.co/qLL8CKv5/american-flag.jpg": {
     language: "English",
-    spelling: "A-U-S-T-R-A-L-I-A",
+    spelling: "U-N-I-T-E-D S-T-A-T-E-S",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/english.mp3"
+  },
+  "https://i.ibb.co/dwjk9s3S/france-flag.jpg": {
+    language: "French",
+    spelling: "F-R-A-N-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/french.mp3"
   }
 };
 
 // Mapeamento de comidas para países
 const foodCountryMap: Record<string, { country: string; food: string; audioSrc: string }> = {
-  "https://i.ibb.co/NdZwZ44m/german-flag.jpg": {
+  "https://i.ibb.co/kskr0zmq/german-flag.jpg": {
     country: "Germany",
     food: "sausages",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/sausages.mp3"
   },
-  "https://i.ibb.co/JM5NJQp/italian-flag.jpg": {
+  "https://i.ibb.co/7xnjGkDN/italian-flag.jpg": {
     country: "Italy", 
     food: "pizza",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/pizza.mp3"
   },
-  "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg": {
-    country: "Mexico",
-    food: "tacos",
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/tacos.mp3"
-  },
-  "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg": {
+  "https://i.ibb.co/21VkwN19/spanish-fla.jpg": {
     country: "Spain",
     food: "paella",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/paella.mp3"
   },
-  "https://i.ibb.co/4ZLRHg2y/american-flag.jpg": {
+  "https://i.ibb.co/qLL8CKv5/american-flag.jpg": {
     country: "United States",
     food: "hamburger",
     audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/hamburger.mp3"
   },
-  "https://i.ibb.co/DPT3wDXr/australian-flag.jpg": {
-    country: "Australia",
-    food: "meat pie",
-    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/meat_pie.mp3"
+  "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg": {
+    country: "Brazil",
+    food: "feijoada",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/feijoada.mp3"
+  },
+  "https://i.ibb.co/dwjk9s3S/france-flag.jpg": {
+    country: "France",
+    food: "croissant",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/croissant.mp3"
+  }
+};
+
+// Mapeamento de comidas para spelling
+const foodSpellingMap: Record<string, { food: string; spelling: string; audioSrc: string }> = {
+  "https://i.ibb.co/8LF0pHjv/yogurt.jpg": {
+    food: "yogurt",
+    spelling: "Y-O-G-U-R-T",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/yogurt.mp3"
+  },
+  "https://i.ibb.co/99zBTC4q/sandwich.jpg": {
+    food: "sandwich",
+    spelling: "S-A-N-D-W-I-C-H",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/sandwich.mp3"
+  },
+  "https://i.ibb.co/W4kNfZ2F/cookies.jpg": {
+    food: "cookies",
+    spelling: "C-O-O-K-I-E-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/cookies.mp3"
+  },
+  "https://i.ibb.co/pjYHqBsc/juice.jpg": {
+    food: "juice",
+    spelling: "J-U-I-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/juice.mp3"
+  },
+  "https://i.ibb.co/jvg8bfKY/orange-juice.jpg": {
+    food: "orange juice",
+    spelling: "O-R-A-N-G-E J-U-I-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/orange_juice.mp3"
+  },
+  "https://i.ibb.co/HfCPk3qD/friends.jpg": {
+    food: "friends",
+    spelling: "F-R-I-E-N-D-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/friends.mp3"
   }
 };
 
@@ -503,8 +532,8 @@ export default function LessonLanguagesAndCountries() {
   });
 
   // Estados para as imagens selecionadas
-  const [selectedFlag, setSelectedFlag] = useState("https://i.ibb.co/NdZwZ44m/german-flag.jpg");
-  const [selectedFood, setSelectedFood] = useState("https://i.ibb.co/NdZwZ44m/german-flag.jpg");
+  const [selectedFlag, setSelectedFlag] = useState("https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg");
+  const [selectedFood, setSelectedFood] = useState("https://i.ibb.co/8LF0pHjv/yogurt.jpg");
   
   // Estados para as práticas de substituição
   const [subs1Exercises, setSubs1Exercises] = useState(substitutionPractice1);
@@ -520,14 +549,14 @@ export default function LessonLanguagesAndCountries() {
   // Estado para diálogos dinâmicos baseados na seleção
   const [practiceDialogs, setPracticeDialogs] = useState([
     {
-      question: "Do you want to speak German or Italian with me?",
-      response: "I want to speak Italian with you.",
-      highlighted: ["German", "Italian", "Italian"]
+      question: "Do you want to speak Portuguese or French with me?",
+      response: "I want to speak Portuguese with you.",
+      highlighted: ["Portuguese", "French", "Portuguese"]
     },
     {
-      question: "How do you spell 'Germany'?",
-      response: "G-E-R-M-A-N-Y",
-      highlighted: ["Germany", "G", "E", "R", "M", "A", "N", "Y"]
+      question: "How do you spell 'yogurt'?",
+      response: "Y-O-G-U-R-T",
+      highlighted: ["yogurt", "Y", "O", "G", "U", "R", "T"]
     }
   ]);
 
@@ -555,33 +584,35 @@ export default function LessonLanguagesAndCountries() {
   // Atualizar diálogos quando a bandeira for selecionada
   useEffect(() => {
     const countryInfo = countryLanguageMap[selectedFlag];
-    if (countryInfo) {
+    const foodInfo = foodSpellingMap[selectedFood];
+    if (countryInfo && foodInfo) {
       setPracticeDialogs([
         {
-          question: `Do you want to speak ${countryInfo.language} or Italian with me?`,
+          question: `Do you want to speak ${countryInfo.language} or French with me?`,
           response: `I want to speak ${countryInfo.language} with you.`,
-          highlighted: [countryInfo.language, "Italian", countryInfo.language]
+          highlighted: [countryInfo.language, "French", countryInfo.language]
         },
         {
-          question: `How do you spell '${getCountryName(countryInfo.language)}'?`,
-          response: countryInfo.spelling,
+          question: `How do you spell '${foodInfo.food}'?`,
+          response: foodInfo.spelling,
           highlighted: [
-            getCountryName(countryInfo.language),
-            ...countryInfo.spelling.split('-')
+            foodInfo.food,
+            ...foodInfo.spelling.split(' ')
           ]
         }
       ]);
     }
-  }, [selectedFlag]);
+  }, [selectedFlag, selectedFood]);
 
   // Função auxiliar para obter o nome do país baseado no idioma
   const getCountryName = (language: string): string => {
     const countryMap: Record<string, string> = {
       "German": "Germany",
       "Portuguese": "Brazil", 
-      "Spanish": "Mexico",
+      "Spanish": "Spain",
       "Italian": "Italy",
-      "English": "United States"
+      "English": "United States",
+      "French": "France"
     };
     return countryMap[language] || language;
   };
@@ -655,7 +686,14 @@ export default function LessonLanguagesAndCountries() {
     );
     if (countrySpelling) return countrySpelling.audioSrc;
 
-    // Verificar se é uma comida
+    // Verificar se é uma comida do spelling
+    const foodSpellingEntry = Object.values(foodSpellingMap).find(
+      info => info.food.toLowerCase() === word.toLowerCase() || 
+             info.spelling.replace(/-/g, ' ').includes(word.toUpperCase())
+    );
+    if (foodSpellingEntry) return foodSpellingEntry.audioSrc;
+
+    // Verificar se é uma comida tradicional
     const foodEntry = Object.values(foodCountryMap).find(
       info => info.food.toLowerCase() === word.toLowerCase()
     );
@@ -672,24 +710,24 @@ export default function LessonLanguagesAndCountries() {
     }));
   };
 
-  // Array de bandeiras para a galeria - URLs OTIMIZADAS
+  // Array de bandeiras para a galeria - URLs FORNECIDAS PELO USUÁRIO
   const flagImages = [
-    "https://i.ibb.co/NdZwZ44m/german-flag.jpg",
-    "https://i.ibb.co/TBJWVfPc/brazilian-flag.jpg", 
-    "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg",
-    "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg",
-    "https://i.ibb.co/4ZLRHg2y/american-flag.jpg",
-    "https://i.ibb.co/JM5NJQp/italian-flag.jpg",
-    "https://i.ibb.co/DPT3wDXr/australian-flag.jpg"
+    "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg",
+    "https://i.ibb.co/7xnjGkDN/italian-flag.jpg", 
+    "https://i.ibb.co/21VkwN19/spanish-fla.jpg",
+    "https://i.ibb.co/kskr0zmq/german-flag.jpg",
+    "https://i.ibb.co/qLL8CKv5/american-flag.jpg",
+    "https://i.ibb.co/dwjk9s3S/france-flag.jpg"
   ];
 
+  // Array de comidas para a galeria - USANDO AS IMAGENS FORNECIDAS
   const foodImages = [
-    "https://i.ibb.co/NdZwZ44m/german-flag.jpg",
-    "https://i.ibb.co/JM5NJQp/italian-flag.jpg",
-    "https://i.ibb.co/hJ5sTDVG/mexican-flag.jpg",
-    "https://i.ibb.co/N2W0tLQF/spanish-flag.jpg",
-    "https://i.ibb.co/4ZLRHg2y/american-flag.jpg",
-    "https://i.ibb.co/DPT3wDXr/australian-flag.jpg"
+    "https://i.ibb.co/8LF0pHjv/yogurt.jpg",
+    "https://i.ibb.co/99zBTC4q/sandwich.jpg",
+    "https://i.ibb.co/W4kNfZ2F/cookies.jpg",
+    "https://i.ibb.co/pjYHqBsc/juice.jpg",
+    "https://i.ibb.co/jvg8bfKY/orange-juice.jpg",
+    "https://i.ibb.co/HfCPk3qD/friends.jpg"
   ];
 
   return (
@@ -718,10 +756,10 @@ export default function LessonLanguagesAndCountries() {
 
           {sections.speakNow && (
             <div className="p-8">
-              {/* Galeria de Bandeiras - TOTALMENTE OTIMIZADA */}
+              {/* Galeria de Bandeiras - COM AS IMAGENS FORNECIDAS */}
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Flags - Click to select and change language</h3>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Languages - Click to select and change language</h3>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
                   {flagImages.map((src, index) => (
                     <div 
                       key={index} 
@@ -737,7 +775,7 @@ export default function LessonLanguagesAndCountries() {
                         className="object-cover"
                         quality={85}
                         priority={index < 4}
-                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 14vw"
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIGZpbGw9IiNmM2YzZjMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtc2l6ZT0iMTIiPkZsYWc8L3RleHQ+PC9zdmc+';
@@ -751,11 +789,11 @@ export default function LessonLanguagesAndCountries() {
                 </div>
               </div>
 
-              {/* Diálogos de Prática - LAYOUT OTIMIZADO */}
+              {/* Diálogos de Prática */}
               <div className="space-y-6 mb-8">
                 <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
                   <div className="flex flex-col md:flex-row gap-4 items-start">
-                    {/* Container de Imagem Reduzido */}
+                    {/* Container de Imagem */}
                     <div className="w-full md:w-32 flex-shrink-0">
                       <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
                         selectedFlag === selectedFlag ? 'border-blue-400 shadow-md' : 'border-gray-300'
@@ -807,7 +845,7 @@ export default function LessonLanguagesAndCountries() {
 
                 <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
                   <div className="flex flex-col md:flex-row gap-4 items-start">
-                    {/* Container de Imagem Reduzido */}
+                    {/* Container de Imagem */}
                     <div className="w-full md:w-32 flex-shrink-0">
                       <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
                         selectedFood === selectedFood ? 'border-blue-400 shadow-md' : 'border-gray-300'
@@ -832,9 +870,9 @@ export default function LessonLanguagesAndCountries() {
                     <div className="flex-1 min-w-0">
                       <div className="mb-3">
                         <p className="text-sm font-medium text-gray-600 mb-2">
-                          Practice spelling country names. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
+                          Practice spelling food names. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
                         </p>
-                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm">
+                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                           <div className="space-y-1">
                             <p className="text-sm font-semibold text-blue-700">Question:</p>
                             <HighlightedText 
@@ -845,11 +883,17 @@ export default function LessonLanguagesAndCountries() {
                           </div>
                           <div className="space-y-1">
                             <p className="text-sm font-semibold text-green-700">Response:</p>
-                            <HighlightedText 
-                              text={practiceDialogs[1].response} 
-                              highlightedWords={practiceDialogs[1].highlighted}
-                              onWordClick={handleWordClick}
-                            />
+                            <div className="text-lg font-mono bg-white p-2 rounded border border-blue-200">
+                              {practiceDialogs[1].response.split(' ').map((letter, index) => (
+                                <span
+                                  key={index}
+                                  className="text-red-600 font-bold cursor-pointer hover:bg-yellow-100 px-1 rounded mx-px"
+                                  onClick={() => handleWordClick(letter.replace('-', ''))}
+                                >
+                                  {letter}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -858,9 +902,9 @@ export default function LessonLanguagesAndCountries() {
                 </div>
               </div>
 
-              {/* Galeria de Comidas Internacionais - TOTALMENTE OTIMIZADA */}
+              {/* Galeria de Comidas Internacionais */}
               <div>
-                <h3 className="text-xl font-bold text-blue-800 mb-4">🍽️ International Foods - Click to select</h3>
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🍽️ International Foods - Click to select and spell food names</h3>
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {foodImages.map((src, index) => (
                     <div 
