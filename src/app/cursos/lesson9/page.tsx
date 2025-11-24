@@ -36,15 +36,15 @@ export default function LessonVerbsAndPlaces() {
   };
 
   // URLs das imagens
-  const mainImage = "https://i.ibb.co/yFCBDfHp/people-moving-in.jpg";
-  const cityImage = "https://i.ibb.co/placeholder-city.jpg";
-  const countryImage = "https://i.ibb.co/placeholder-country.jpg";
+  const mainImage = "/images/l9-main.jpg";
+  const cityImage = "https://i.ibb.co/90VVpks/BERLIN-ALEMANHA.jpg";
+  const countryImage = "https://i.ibb.co/Rpm25StY/BARCELONA-ESPANHA.jpg";
 
   return (
     <div
       className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
       style={{
-        backgroundImage: `url("https://i.ibb.co/zW5DVx76/L9-BG.jpg")`,
+        backgroundImage: `url("/images/l7-bgg.jpg")`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
