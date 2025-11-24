@@ -1,949 +1,1587 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useEffect, useState, useRef } from "react";
+import { db, auth } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { Pause, Play, RotateCcw, Volume2, ChevronDown, ChevronUp, X, Check, XCircle } from "lucide-react";
 
-type SectionKey = 'verbs' | 'vocabulary' | 'usefulPhrases' | 'grammar';
+// Dados atualizados para focar em idiomas e países
+const substitutionPractice1 = [
+  { 
+    key: "subs-1", 
+    original: "Eles estudam inglês na escola. / Nós / Eu",
+    base: "{0} study English at school.",
+    options: ["They", "We", "I"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-2", 
+    original: "Você fala francês também? / alemão / italiano",
+    base: "Do you speak {0} too?",
+    options: ["French", "German", "Italian"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-3", 
+    original: "Ela gosta de estudar com seu amigo. / seu professor / suas amigas",
+    base: "She likes to study with {0}.",
+    options: ["her friend", "her teacher", "her friends"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-4", 
+    original: "Como se escreve 'milk'? / apple / butter",
+    base: "How do you spell '{0}'?",
+    options: ["milk", "apple", "butter"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs-5", 
+    original: "Nós preferimos estudar de manhã. / à tarde",
+    base: "We prefer to study {0}.",
+    options: ["in the morning", "in the afternoon"],
+    currentIndex: 0
+  }
+];
 
-export default function LessonVerbsAndPlaces() {
-  const router = useRouter();
-  const [openDrills, setOpenDrills] = useState({
-    verbs: false,
-    vocabulary: false,
-    usefulPhrases: false,
-    grammar: false,
-  });
+const substitutionPractice2 = [
+  { 
+    key: "subs2-1", 
+    original: "Ele não quer beber suco no café da manhã. /água/leite",
+    correctAnswer: "He doesn't want to drink juice for breakfast.",
+    options: ["juice", "water", "milk"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-2", 
+    original: "Eles preferem comer salada. /Eu/Nós",
+    correctAnswer: "They prefer to eat salad.",
+    options: ["They", "I", "We"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-3", 
+    original: "Nós queremos comer uma fatia de torta. /queijo/pão",
+    correctAnswer: "We want to eat a slice of pie.",
+    options: ["pie", "cheese", "bread"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-4", 
+    original: "Ela ama comer batatas fritas. E você?/torradas/geleia",
+    correctAnswer: "She loves to eat french fries. And you?",
+    options: ["french fries", "toast", "jam"],
+    currentIndex: 0
+  },
+  { 
+    key: "subs2-5", 
+    original: "Eu não estudo português aqui. / lá/na escola",
+    correctAnswer: "I don't study Portuguese here.",
+    options: ["here", "there", "at school"],
+    currentIndex: 0
+  }
+];
 
-  const toggleDrill = (section: SectionKey) => {
-    setOpenDrills({
-      ...openDrills,
-      [section]: !openDrills[section]
-    });
+const negativeExercises = [
+  { 
+    key: "neg-1", 
+    sentence: "She studies French in the afternoon.",
+    answer: "She doesn't study French in the afternoon."
+  },
+  { 
+    key: "neg-2", 
+    sentence: "He eats bread and butter in the morning.",
+    answer: "He doesn't eat bread and butter in the morning."
+  },
+  { 
+    key: "neg-3", 
+    sentence: "They want to eat eggs for breakfast.",
+    answer: "They don't want to eat eggs for breakfast."
+  },
+  { 
+    key: "neg-4", 
+    sentence: "We drink a cup of tea in the afternoon.",
+    answer: "We don't drink a cup of tea in the afternoon."
+  },
+  { 
+    key: "neg-5", 
+    sentence: "He likes to eat fish.",
+    answer: "He doesn't like to eat fish."
+  },
+  { 
+    key: "neg-6", 
+    sentence: "She speaks English with her teacher.",
+    answer: "She doesn't speak English with her teacher."
+  }
+];
+
+const affirmativeExercises = [
+  { 
+    key: "aff-1", 
+    sentence: "He doesn't eat sausages for breakfast.",
+    answer: "He eats sausages for breakfast."
+  },
+  { 
+    key: "aff-2", 
+    sentence: "She doesn't like to drink apple juice.",
+    answer: "She likes to drink apple juice."
+  },
+  { 
+    key: "aff-3", 
+    sentence: "They don't eat salad for lunch.",
+    answer: "They eat salad for lunch."
+  },
+  { 
+    key: "aff-4", 
+    sentence: "He doesn't speak Portuguese at school.",
+    answer: "He speaks Portuguese at school."
+  },
+  { 
+    key: "aff-5", 
+    sentence: "We don't study with your teacher.",
+    answer: "We study with your teacher."
+  }
+];
+
+const interrogativeExercises = [
+  { 
+    key: "int-1", 
+    sentence: "He speaks Italian with his friend.",
+    answer: "Does he speak Italian with his friend?"
+  },
+  { 
+    key: "int-2", 
+    sentence: "She prefers to study English.",
+    answer: "Does she prefer to study English?"
+  },
+  { 
+    key: "int-3", 
+    sentence: "They want to drink a glass of water.",
+    answer: "Do they want to drink a glass of water?"
+  },
+  { 
+    key: "int-4", 
+    sentence: "We want to study there.",
+    answer: "Do we want to study there?"
+  },
+  { 
+    key: "int-5", 
+    sentence: "He wants to eat beef.",
+    answer: "Does he want to eat beef?"
+  }
+];
+
+const personalQuestions = [
+  {
+    id: 1,
+    question: "Do you speak English with your friends from other countries?",
+    placeholder: "Write about which languages you speak with international friends..."
+  },
+  {
+    id: 2,
+    question: "How do you spell the name of your favorite country?",
+    placeholder: "Spell the country name here..."
+  },
+  {
+    id: 3,
+    question: "Do you prefer to study languages in the morning or afternoon?",
+    placeholder: "Write your preference and explain why..."
+  },
+  {
+    id: 4,
+    question: "What traditional food from another country do you like?",
+    placeholder: "Describe a foreign dish you enjoy..."
+  },
+  {
+    id: 5,
+    question: "Do you want to visit Germany or Italy? Why?",
+    placeholder: "Explain your choice and reasons..."
+  },
+  {
+    id: 6,
+    question: "Which language do you study at school besides Portuguese?",
+    placeholder: "Tell about your language studies at school..."
+  },
+  {
+    id: 7,
+    question: "What do you like to learn about different cultures?",
+    placeholder: "Describe cultural aspects that interest you..."
+  },
+  {
+    id: 8,
+    question: "Do you want to speak French with people from France?",
+    placeholder: "Share your thoughts about speaking with native speakers..."
+  },
+  {
+    id: 9,
+    question: 'How do you spell "Germany" in English?',
+    placeholder: "Spell the country name..."
+  },
+  {
+    id: 10,
+    question: 'How do you spell "Italy" in English?',
+    placeholder: "Spell the country name..."
+  }
+];
+
+// Perguntas para a seção TUNE IN YOUR EARS
+const videoQuestions = [
+  {
+    id: 1,
+    question: "What languages does the speaker mention in the video?",
+    isPersonal: false,
+    vocabulary: [
+      { english: "To mention", portuguese: "mencionar" },
+      { english: "Language", portuguese: "idioma" },
+      { english: "To talk about", portuguese: "falar sobre" }
+    ],
+    userAnswer: ""
+  },
+  {
+    id: 2,
+    question: "Which countries does the speaker talk about visiting?",
+    isPersonal: false,
+    vocabulary: [
+      { english: "To visit", portuguese: "visitar" },
+      { english: "Country", portuguese: "país" },
+      { english: "Travel", portuguese: "viagem" }
+    ],
+    userAnswer: ""
+  },
+  {
+    id: 3,
+    question: "What does the speaker say about learning new languages?",
+    isPersonal: false,
+    vocabulary: [
+      { english: "To learn", portuguese: "aprender" },
+      { english: "New", portuguese: "novo" },
+      { english: "Experience", portuguese: "experiência" }
+    ],
+    userAnswer: ""
+  },
+  {
+    id: 4,
+    question: "Do you want to visit the countries mentioned in the video? Why?",
+    isPersonal: true,
+    vocabulary: [
+      { english: "To want", portuguese: "querer" },
+      { english: "Because", portuguese: "porque" },
+      { english: "Reason", portuguese: "razão" }
+    ],
+    userAnswer: ""
+  },
+  {
+    id: 5,
+    question: "Which language from the video would you like to learn? Why?",
+    isPersonal: true,
+    vocabulary: [
+      { english: "Would like", portuguese: "gostaria" },
+      { english: "To choose", portuguese: "escolher" },
+      { english: "Interesting", portuguese: "interessante" }
+    ],
+    userAnswer: ""
+  }
+];
+
+// Sistema de avaliação de respostas
+const checkAnswer = (userAnswer: string, correctAnswer: string): boolean => {
+  const normalize = (text: string) => 
+    text.toLowerCase().trim().replace(/[.,?!]/g, '');
+  
+  return normalize(userAnswer) === normalize(correctAnswer);
+};
+
+interface AudioPlayerProps {
+  src: string;
+  compact?: boolean;
+}
+
+const AudioPlayer = ({ src, compact = false }: AudioPlayerProps) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current || new Audio(src);
+    if (!audioRef.current) audioRef.current = audio;
+    else audio.src = src;
+
+    const updateProgress = () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setProgress(100);
+    };
+
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("ended", handleEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateProgress);
+      audio.removeEventListener("ended", handleEnded);
+      audio.pause();
+    };
+  }, [src]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => console.error("Audio error:", err));
+    }
+    setIsPlaying(!isPlaying);
   };
 
-  const playAudio = (text: string) => {
-    const formattedText = text
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s*\/\s*/g, '-or-')
-      .trim();
-    
-    console.log('Tentando reproduzir áudio:', `/audios/${formattedText}.mp3`);
-    
-    const audio = new Audio(`/audios/${formattedText}.mp3`);
-    audio.play().catch(e => console.error("Erro ao reproduzir áudio:", e));
+  const resetAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlaying(false);
+      setProgress(0);
+    }
   };
 
-  // URLs das imagens
-  const mainImage = "/images/l9-main.jpg";
-  const cityImage = "https://i.ibb.co/90VVpks/BERLIN-ALEMANHA.jpg";
-  const countryImage = "https://i.ibb.co/Rpm25StY/BARCELONA-ESPANHA.jpg";
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !progressBarRef.current) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const width = rect.width;
+    const percent = offsetX / width;
+    audio.currentTime = percent * audio.duration;
+    setProgress(percent * 100);
+  };
 
   return (
-    <div
-      className="min-h-screen rounded-2xl py-16 px-6 bg-fixed"
-      style={{
-        backgroundImage: `url("/images/l7-bgg.jpg")`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <div className="max-w-5xl mx-auto bg-[#f0f8ff] bg-opacity-95 rounded-[40px] p-10 shadow-lg">
+    <div className={`flex items-center gap-2 ${compact ? "ml-2" : ""}`}>
+      <button 
+        onClick={togglePlayPause} 
+        className={`${compact ? "p-1" : "p-2"} bg-blue-500 text-white rounded-full hover:bg-blue-600`}
+      >
+        {isPlaying ? <Pause size={compact ? 12 : 16} /> : <Play size={compact ? 12 : 16} />}
+      </button>
+      <button 
+        onClick={resetAudio} 
+        className={`${compact ? "p-1" : "p-2"} bg-gray-500 text-white rounded-full hover:bg-gray-600`}
+      >
+        <RotateCcw size={compact ? 12 : 16} />
+      </button>
+      
+      {!compact && (
+        <div 
+          ref={progressBarRef}
+          className="w-20 h-1 bg-gray-300 rounded-full overflow-hidden cursor-pointer"
+          onClick={handleProgressClick}
+        >
+          <div 
+            className="h-full bg-blue-500 transition-all duration-200" 
+            style={{ width: `${progress}%` }} 
+          />
+        </div>
+      )}
+      
+      <audio ref={audioRef} src={src} preload="auto" />
+    </div>
+  );
+};
+
+const SimpleAudioPlayer = ({ src }: { src: string }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().catch(err => console.error("Error playing audio:", err));
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={playAudio}
+        className="p-1 bg-green-500 text-white rounded-full hover:bg-green-600"
+      >
+        <Volume2 size={14} />
+      </button>
+      <audio ref={audioRef} src={src} preload="none" />
+    </div>
+  );
+};
+
+// Componente para destaque de palavras
+const HighlightedText = ({ 
+  text, 
+  highlightedWords, 
+  onWordClick 
+}: { 
+  text: string; 
+  highlightedWords: string[];
+  onWordClick?: (word: string) => void;
+}) => {
+  const words = text.split(' ');
+  
+  return (
+    <p className="text-gray-800">
+      {words.map((word, index) => {
+        const cleanWord = word.replace('?', '').replace('!', '').replace('.', '').replace('"', '');
+        const isHighlighted = highlightedWords.includes(cleanWord);
         
-        {/* Título centralizado com imagem abaixo */}
+        return (
+          <span
+            key={index}
+            className={isHighlighted ? "text-red-600 font-semibold cursor-pointer hover:bg-yellow-100 px-1 rounded" : ""}
+            onClick={isHighlighted && onWordClick ? () => onWordClick(cleanWord) : undefined}
+          >
+            {word}
+            {index < words.length - 1 ? ' ' : ''}
+          </span>
+        );
+      })}
+    </p>
+  );
+};
+
+// Componente para mostrar resultado da avaliação
+const AnswerResult = ({ isCorrect, correctAnswer }: { isCorrect: boolean; correctAnswer: string }) => {
+  if (isCorrect) {
+    return (
+      <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md">
+        <Check size={16} className="text-green-600" />
+        <span className="text-sm text-green-700 font-medium">Correct!</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md">
+      <XCircle size={16} className="text-red-600" />
+      <span className="text-sm text-red-700">
+        <span className="font-medium">Expected:</span> {correctAnswer}
+      </span>
+    </div>
+  );
+};
+
+// Mapeamento de países para idiomas
+const countryLanguageMap: Record<string, { language: string; spelling: string; audioSrc: string }> = {
+  "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg": {
+    language: "Portuguese", 
+    spelling: "B-R-A-Z-I-L",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/portuguese.mp3"
+  },
+  "https://i.ibb.co/7xnjGkDN/italian-flag.jpg": {
+    language: "Italian",
+    spelling: "I-T-A-L-Y",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/italian.mp3"
+  },
+  "https://i.ibb.co/21VkwN19/spanish-fla.jpg": {
+    language: "Spanish",
+    spelling: "S-P-A-I-N",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/spanish.mp3"
+  },
+  "https://i.ibb.co/kskr0zmq/german-flag.jpg": {
+    language: "German",
+    spelling: "G-E-R-M-A-N-Y",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/german.mp3"
+  },
+  "https://i.ibb.co/qLL8CKv5/american-flag.jpg": {
+    language: "English",
+    spelling: "U-N-I-T-E-D S-T-A-T-E-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/english.mp3"
+  },
+  "https://i.ibb.co/dwjk9s3S/france-flag.jpg": {
+    language: "French",
+    spelling: "F-R-A-N-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/french.mp3"
+  }
+};
+
+// Mapeamento de comidas para países
+const foodCountryMap: Record<string, { country: string; food: string; audioSrc: string }> = {
+  "https://i.ibb.co/kskr0zmq/german-flag.jpg": {
+    country: "Germany",
+    food: "sausages",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/sausages.mp3"
+  },
+  "https://i.ibb.co/7xnjGkDN/italian-flag.jpg": {
+    country: "Italy", 
+    food: "pizza",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/pizza.mp3"
+  },
+  "https://i.ibb.co/21VkwN19/spanish-fla.jpg": {
+    country: "Spain",
+    food: "paella",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/paella.mp3"
+  },
+  "https://i.ibb.co/qLL8CKv5/american-flag.jpg": {
+    country: "United States",
+    food: "hamburger",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/hamburger.mp3"
+  },
+  "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg": {
+    country: "Brazil",
+    food: "feijoada",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/feijoada.mp3"
+  },
+  "https://i.ibb.co/dwjk9s3S/france-flag.jpg": {
+    country: "France",
+    food: "croissant",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/croissant.mp3"
+  }
+};
+
+// Mapeamento de comidas para spelling
+const foodSpellingMap: Record<string, { food: string; spelling: string; audioSrc: string }> = {
+  "https://i.ibb.co/8LF0pHjv/yogurt.jpg": {
+    food: "yogurt",
+    spelling: "Y-O-G-U-R-T",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/yogurt.mp3"
+  },
+  "https://i.ibb.co/99zBTC4q/sandwich.jpg": {
+    food: "sandwich",
+    spelling: "S-A-N-D-W-I-C-H",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/sandwich.mp3"
+  },
+  "https://i.ibb.co/W4kNfZ2F/cookies.jpg": {
+    food: "cookies",
+    spelling: "C-O-O-K-I-E-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/cookies.mp3"
+  },
+  "https://i.ibb.co/pjYHqBsc/juice.jpg": {
+    food: "juice",
+    spelling: "J-U-I-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/juice.mp3"
+  },
+  "https://i.ibb.co/jvg8bfKY/orange-juice.jpg": {
+    food: "orange juice",
+    spelling: "O-R-A-N-G-E J-U-I-C-E",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/orange_juice.mp3"
+  },
+  "https://i.ibb.co/HfCPk3qD/friends.jpg": {
+    food: "friends",
+    spelling: "F-R-I-E-N-D-S",
+    audioSrc: "https://raw.githubusercontent.com/your-repo/audio/main/friends.mp3"
+  }
+};
+
+export default function LessonLanguagesAndCountries() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Estados para controle de expansão/recolhimento das seções
+  const [sections, setSections] = useState({
+    speakNow: true,
+    tuneIn: true,
+    substitution1: true,
+    negative: true,
+    substitution2: true,
+    affirmative: true,
+    interrogative: true,
+    questions: true
+  });
+
+  // Estados para as imagens selecionadas
+  const [selectedFlag, setSelectedFlag] = useState("https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg");
+  const [selectedFood, setSelectedFood] = useState("https://i.ibb.co/8LF0pHjv/yogurt.jpg");
+  
+  // Estados para as práticas de substituição
+  const [subs1Exercises, setSubs1Exercises] = useState(substitutionPractice1);
+  const [subs2Exercises, setSubs2Exercises] = useState(substitutionPractice2);
+  
+  // Estados para as respostas escritas
+  const [writtenAnswers, setWrittenAnswers] = useState<Record<string, string>>({});
+  
+  // Estados para avaliação de respostas
+  const [answerResults, setAnswerResults] = useState<Record<string, boolean>>({});
+  const [showAnswerResults, setShowAnswerResults] = useState<Record<string, boolean>>({});
+
+  // Estado para as respostas do vídeo
+  const [videoAnswers, setVideoAnswers] = useState(videoQuestions);
+
+  // Estado para diálogos dinâmicos baseados na seleção
+  const [practiceDialogs, setPracticeDialogs] = useState([
+    {
+      question: "Do you want to speak Portuguese or French with me?",
+      response: "I want to speak Portuguese with you.",
+      highlighted: ["Portuguese", "French", "Portuguese"]
+    },
+    {
+      question: "How do you spell 'yogurt'?",
+      response: "Y-O-G-U-R-T",
+      highlighted: ["yogurt", "Y", "O", "G", "U", "R", "T"]
+    }
+  ]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+        
+        // Carregar respostas salvas
+        const answersRef = doc(db, "userLesson8Answers", user.uid);
+        const answersSnap = await getDoc(answersRef);
+        
+        if (answersSnap.exists()) {
+          const data = answersSnap.data();
+          setSubs1Exercises(data.subs1Exercises || substitutionPractice1);
+          setSubs2Exercises(data.subs2Exercises || substitutionPractice2);
+          setWrittenAnswers(data.writtenAnswers || {});
+          setVideoAnswers(data.videoAnswers || videoQuestions);
+        }
+      }
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  // Atualizar diálogos quando a bandeira for selecionada
+  useEffect(() => {
+    const countryInfo = countryLanguageMap[selectedFlag];
+    const foodInfo = foodSpellingMap[selectedFood];
+    if (countryInfo && foodInfo) {
+      setPracticeDialogs([
+        {
+          question: `Do you want to speak ${countryInfo.language} or French with me?`,
+          response: `I want to speak ${countryInfo.language} with you.`,
+          highlighted: [countryInfo.language, "French", countryInfo.language]
+        },
+        {
+          question: `How do you spell '${foodInfo.food}'?`,
+          response: foodInfo.spelling,
+          highlighted: [
+            foodInfo.food,
+            ...foodInfo.spelling.split(' ')
+          ]
+        }
+      ]);
+    }
+  }, [selectedFlag, selectedFood]);
+
+  // Função auxiliar para obter o nome do país baseado no idioma
+  const getCountryName = (language: string): string => {
+    const countryMap: Record<string, string> = {
+      "German": "Germany",
+      "Portuguese": "Brazil", 
+      "Spanish": "Spain",
+      "Italian": "Italy",
+      "English": "United States",
+      "French": "France"
+    };
+    return countryMap[language] || language;
+  };
+
+  const saveAllAnswers = async () => {
+    if (userId) {
+      const answersRef = doc(db, "userLesson8Answers", userId);
+      await setDoc(answersRef, {
+        subs1Exercises,
+        subs2Exercises,
+        writtenAnswers,
+        videoAnswers,
+        lastUpdated: new Date()
+      });
+      alert("All answers saved successfully!");
+    }
+  };
+
+  // Funções para manipular as práticas de substituição
+  const handleSubs1OptionClick = (exerciseKey: string, optionIndex: number) => {
+    setSubs1Exercises(prev => 
+      prev.map(exercise => 
+        exercise.key === exerciseKey 
+          ? { ...exercise, currentIndex: optionIndex }
+          : exercise
+      )
+    );
+  };
+
+  const handleSubs2OptionClick = (exerciseKey: string, optionIndex: number) => {
+    setSubs2Exercises(prev => 
+      prev.map(exercise => 
+        exercise.key === exerciseKey 
+          ? { ...exercise, currentIndex: optionIndex }
+          : exercise
+      )
+    );
+  };
+
+  const handleWrittenAnswerChange = (key: string, value: string) => {
+    setWrittenAnswers(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Função para verificar respostas
+  const handleCheckAnswer = (exerciseKey: string, userAnswer: string, correctAnswer: string) => {
+    const isCorrect = checkAnswer(userAnswer, correctAnswer);
+    setAnswerResults(prev => ({ ...prev, [exerciseKey]: isCorrect }));
+    setShowAnswerResults(prev => ({ ...prev, [exerciseKey]: true }));
+  };
+
+  // Função para tocar áudio quando palavras são clicadas
+  const handleWordClick = (word: string) => {
+    // Buscar o áudio correspondente à palavra
+    const audioSrc = getAudioForWord(word);
+    if (audioSrc) {
+      const audio = new Audio(audioSrc);
+      audio.play().catch(err => console.error("Error playing word audio:", err));
+    }
+  };
+
+  // Função auxiliar para obter áudio baseado na palavra
+  const getAudioForWord = (word: string): string | null => {
+    // Verificar se é um idioma
+    const countryEntry = Object.values(countryLanguageMap).find(
+      info => info.language.toLowerCase() === word.toLowerCase()
+    );
+    if (countryEntry) return countryEntry.audioSrc;
+
+    // Verificar se é um país
+    const countrySpelling = Object.values(countryLanguageMap).find(
+      info => info.spelling.replace(/-/g, '') === word.toUpperCase()
+    );
+    if (countrySpelling) return countrySpelling.audioSrc;
+
+    // Verificar se é uma comida do spelling
+    const foodSpellingEntry = Object.values(foodSpellingMap).find(
+      info => info.food.toLowerCase() === word.toLowerCase() || 
+             info.spelling.replace(/-/g, ' ').includes(word.toUpperCase())
+    );
+    if (foodSpellingEntry) return foodSpellingEntry.audioSrc;
+
+    // Verificar se é uma comida tradicional
+    const foodEntry = Object.values(foodCountryMap).find(
+      info => info.food.toLowerCase() === word.toLowerCase()
+    );
+    if (foodEntry) return foodEntry.audioSrc;
+
+    return null;
+  };
+
+  // Função para alternar expansão de seções
+  const toggleSection = (section: keyof typeof sections) => {
+    setSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Funções para a seção TUNE IN YOUR EARS
+  const handleVideoAnswerChange = (questionId: number, answer: string) => {
+    setVideoAnswers(prev =>
+      prev.map(question =>
+        question.id === questionId ? { ...question, userAnswer: answer } : question
+      )
+    );
+  };
+
+  const checkVideoAnswer = (questionId: number) => {
+    // Para perguntas pessoais, apenas marcar como visualizadas
+    const question = videoAnswers.find(q => q.id === questionId);
+    if (question) {
+      alert(`Answer saved for question ${questionId}`);
+    }
+  };
+
+  const saveVideoAnswers = async () => {
+    if (userId) {
+      const answersRef = doc(db, "userLesson8Answers", userId);
+      await setDoc(answersRef, {
+        videoAnswers,
+        lastUpdated: new Date()
+      }, { merge: true });
+      alert("Video answers saved successfully!");
+    }
+  };
+
+  // Array de bandeiras para a galeria - URLs FORNECIDAS PELO USUÁRIO
+  const flagImages = [
+    "https://i.ibb.co/fVR6hwYb/brazilian-portuguese-flag.jpg",
+    "https://i.ibb.co/7xnjGkDN/italian-flag.jpg", 
+    "https://i.ibb.co/21VkwN19/spanish-fla.jpg",
+    "https://i.ibb.co/kskr0zmq/german-flag.jpg",
+    "https://i.ibb.co/qLL8CKv5/american-flag.jpg",
+    "https://i.ibb.co/dwjk9s3S/france-flag.jpg"
+  ];
+
+  // Array de comidas para a galeria - USANDO AS IMAGENS FORNECIDAS
+  const foodImages = [
+    "https://i.ibb.co/8LF0pHjv/yogurt.jpg",
+    "https://i.ibb.co/99zBTC4q/sandwich.jpg",
+    "https://i.ibb.co/W4kNfZ2F/cookies.jpg",
+    "https://i.ibb.co/pjYHqBsc/juice.jpg",
+    "https://i.ibb.co/jvg8bfKY/orange-juice.jpg",
+    "https://i.ibb.co/HfCPk3qD/friends.jpg"
+  ];
+
+  return (
+    <div className="min-h-screen rounded-2xl py-16 px-6 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('/images/world-map-bg.jpg')` }}>
+      <div className="max-w-5xl mx-auto bg-white bg-opacity-95 rounded-[40px] p-10 shadow-lg">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">
-            Lesson 9 - Languages & Countries
-          </h1>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
-            Aprenda a falar sobre onde mora e expressar compreensão em inglês. 🏠🌎
+          <h1 className="text-5xl font-bold text-[#0c4a6e] mb-6">🌍 Lesson 8 – Languages and Countries</h1>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            Practice speaking about languages, countries, and international communication. Improve your grammar skills with diverse pronouns.
           </p>
-          <div className="w-64 h-64 mx-auto">
-            <img
-              src={mainImage}
-              alt="People moving in and understanding different cultures"
-              className="w-full h-full object-cover rounded-2xl shadow-md"
-            />
-          </div>
         </div>
 
-        {/* Seção 1 - Verbos com Drill */}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8 flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">VERBS</h2>
-              <p className="mt-2 text-blue-100 italic">
-                Clique nos verbos para ouvir a pronúncia e pratique suas formas
-              </p>
+        {/* SPEAK RIGHT NOW */}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-blue-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🗣️ SPEAK RIGHT NOW</h2>
+              <button 
+                onClick={() => toggleSection('speakNow')}
+                className="ml-4 p-2 rounded-full hover:bg-blue-600 transition"
+              >
+                {sections.speakNow ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
             </div>
-            <button 
-              onClick={() => toggleDrill('verbs')}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full transition-colors"
-            >
-              {openDrills.verbs ? 'Ocultar Prática' : 'Mostrar Prática'}
-            </button>
           </div>
-          
-          <div className="p-8">
-            <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
-              <li>
-                <button 
-                  onClick={() => playAudio('to live')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  to live
-                </button> = morar, viver
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('to understand')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  to understand
-                </button> = entender
-              </li>
-            </ul>
-            
-            {openDrills.verbs && (
-              <div className="mt-4 bg-blue-50 rounded-2xl p-6 space-y-4 animate-fadeIn">
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós não moramos aqui</span>. / lá / no Brasil</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles não entendem espanhol</span>. / inglês / português</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós não queremos estudar português</span>. / inglês / espanhol</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles não querem morar lá</span>. / aqui / no exterior</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você mora?</span> / estuda / trabalha</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você estuda?</span> / trabalha / mora</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você quer morar?</span> / estudar / trabalhar</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu moro sozinho</span>. / com amigos / com família</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Ela entende essa palavra</span>. / aquela / esta</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós queremos viver no exterior</span>. / aqui / lá</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Seção 2 - Vocabulário com Drill */}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8 flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">NEW WORDS</h2>
-              <p className="mt-2 text-blue-100 italic">
-                Clique em cada palavra para ouvir sua pronúncia correta
-              </p>
-            </div>
-            <button 
-              onClick={() => toggleDrill('vocabulary')}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full transition-colors"
-            >
-              {openDrills.vocabulary ? 'Ocultar Prática' : 'Mostrar Prática'}
-            </button>
-          </div>
-          
-          <div className="p-8">
-            <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <li>
-                <button 
-                  onClick={() => playAudio('classmate')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  classmate
-                </button> = colega de classe
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('language')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  language
-                </button> = língua, idioma
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('word')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  word
-                </button> = palavra
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('city')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  city
-                </button> = cidade
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('country')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  country
-                </button> = país
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('Brazil')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Brazil
-                </button> = Brasil
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('Spain')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Spain
-                </button> = Espanha
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('Germany')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Germany
-                </button> = Alemanha
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('Italy')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Italy
-                </button> = Itália
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('the United States of America')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  the United States of America (U.S.A.)
-                </button> = os Estados Unidos da América
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('alone')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  alone
-                </button> = sozinho(a)
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('where')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  where
-                </button> = onde
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('abroad')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  abroad
-                </button> = no exterior / no estrangeiro
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('this')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  this
-                </button> = este / esta
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('that')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  that
-                </button> = aquele / aquela
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('in')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  in
-                </button> = em / dentro
-              </li>
-            </ul>
-            
-            {openDrills.vocabulary && (
-              <div className="mt-4 bg-blue-50 rounded-2xl p-6 space-y-4 animate-fadeIn">
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Meu colega de classe é da Alemanha</span>. / Espanha / Itália</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu falo o idioma daquele país</span>. / desta cidade / do Brasil</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu não entendo esta palavra</span>. / aquela / essa</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você mora nesta cidade?</span> / naquela / aqui</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles querem morar naquele país</span>. / neste / no exterior</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu moro no Brasil</span>. / Espanha / Itália</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você mora sozinho?</span> / com amigos / com família</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você estuda?</span> / trabalha / mora</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós queremos morar no exterior</span>. / aqui / lá</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu moro nesta cidade</span>. / naquela / no Brasil</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Seção 3 - Frases Úteis com Drill */}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8 flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">USEFUL PHRASES</h2>
-              <p className="mt-2 text-blue-100 italic">
-                Pratique frases comuns para falar sobre onde mora e compreensão
-              </p>
-            </div>
-            <button 
-              onClick={() => toggleDrill('usefulPhrases')}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full transition-colors"
-            >
-              {openDrills.usefulPhrases ? 'Ocultar Prática' : 'Mostrar Prática'}
-            </button>
-          </div>
-          
-          <div className="p-8">
-            <ul className="list-disc pl-6 text-gray-600 space-y-2 mb-6">
-              <li>
-                <button 
-                  onClick={() => playAudio('i understand that word in english')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  I understand that word in English.
-                </button> = Eu entendo aquela palavra em inglês.
-              </li>
-              <li>
-                <button 
-                  onClick={() => playAudio('i live here what about you')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  I live here, what about you?
-                </button> = Eu moro aqui, e você?
-              </li>
-            </ul>
-            
-            {openDrills.usefulPhrases && (
-              <div className="mt-4 bg-blue-50 rounded-2xl p-6 space-y-4 animate-fadeIn">
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu entendo aquela palavra em inglês</span>. / esta / essa</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu moro aqui, e você?</span> / lá / no Brasil</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós queremos morar no exterior</span>. / aqui / lá</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você mora sozinho?</span> / com amigos / com família</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu não entendo essa palavra</span>. / aquela / esta</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você quer morar na Itália?</span> / Espanha / Alemanha</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles querem morar naquele país</span>. / neste / no Brasil</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você quer morar nesta cidade?</span> / naquela / aqui</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eu estudo inglês aqui</span>. / lá / na escola</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você quer comer?</span> / estudar / morar</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Seção 4 - Gramática com Drill */}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8 flex justify-between items-center">
-            <div>
-              <h2 className="text-2xl font-bold">Grammar</h2>
-              <p className="mt-2 text-blue-100 italic">
-                Estruturas para fazer perguntas e negações com do/does
-              </p>
-            </div>
-            <button 
-              onClick={() => toggleDrill('grammar')}
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-full transition-colors"
-            >
-              {openDrills.grammar ? 'Ocultar Prática' : 'Mostrar Prática'}
-            </button>
-          </div>
-          
-          <div className="p-8">
-            <div className="bg-blue-50 p-4 rounded-[20px] text-gray-800 space-y-3 mb-6">
-              <p>
-                <button 
-                  onClick={() => playAudio('where do you live')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Where do you live?
-                </button> = Onde você mora?
-              </p>
-              <p>
-                <button 
-                  onClick={() => playAudio('where do you study')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Where do you study?
-                </button> = Onde você estuda?
-              </p>
-              <p>
-                <button 
-                  onClick={() => playAudio('where do you want to live')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Where do you want to live?
-                </button> = Onde você quer morar?
-              </p>
-              <p>
-                <button 
-                  onClick={() => playAudio('do you understand spanish')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Do you understand Spanish?
-                </button> = Você entende espanhol?
-              </p>
-              <p>
-                <button 
-                  onClick={() => playAudio('do you want to study portuguese')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Do you want to study Portuguese?
-                </button> = Você quer estudar português?
-              </p>
-              <p>
-                <button 
-                  onClick={() => playAudio('do they live here')} 
-                  className="text-blue-600 font-bold cursor-pointer hover:text-blue-800 transition-colors"
-                >
-                  Do they live here?
-                </button> = Eles moram aqui?
-              </p>
-            </div>
-            
-            {openDrills.grammar && (
-              <div className="mt-4 bg-blue-50 rounded-2xl p-6 space-y-4 animate-fadeIn">
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde você mora?</span> / estuda / trabalha</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde ela mora?</span> / estuda / trabalha</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde eles estudam?</span> / moram / trabalham</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Onde ele estuda?</span> / mora / trabalha</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você entende inglês?</span> / espanhol / português</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Ela entende espanhol?</span> / inglês / português</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles querem estudar?</span> / morar / trabalhar</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Ele quer morar aqui?</span> / lá / no exterior</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Nós entendemos esta palavra?</span> / aquela / essa</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Isso funciona?</span> / aquilo / este</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Você mora sozinho?</span> / com amigos / com família</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Ela estuda aqui?</span> / lá / na escola</p>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-blue-200">
-                  <p className="text-lg font-medium text-gray-800"><span className="text-blue-600">Eles entendem essa língua?</span> / aquela / esta</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Seção 5 - Real Life Practice*/}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8">
-            <h2 className="text-2xl font-bold">REAL LIFE</h2>
-            <p className="mt-2 text-blue-100 italic">
-              Substitua as palavras em azul para praticar a pronúncia em situações reais
-            </p>
-          </div>
-          
-          <div className="p-8">
-            <div className="bg-blue-50 rounded-[20px] p-6">
-              <div className="flex flex-col lg:flex-row gap-8">
-                {/* Frases - 2/3 da largura em grandes */}
-                <div className="lg:w-2/3 space-y-6">
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('we want to live abroad')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          1. We <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('want to live')}
-                          >want to live</span> abroad.
-                        </p>
-                        <p className="text-sm text-gray-600">Nós queremos morar no exterior.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('do you live alone')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          2. <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('do you live')}
-                          >Do you live</span> alone?
-                        </p>
-                        <p className="text-sm text-gray-600">Você mora sozinho?</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('i don-t understand this word')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          3. I <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('don-t understand')}
-                          >don't understand</span> this word.
-                        </p>
-                        <p className="text-sm text-gray-600">Eu não entendo essa palavra.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('do you want to live in italy')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          4. <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('do you want to live')}
-                          >Do you want to live</span> in Italy?
-                        </p>
-                        <p className="text-sm text-gray-600">Você quer morar na Itália?</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('they want to live in that country')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          5. They <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('want to live')}
-                          >want to live</span> in that country.
-                        </p>
-                        <p className="text-sm text-gray-600">Eles querem morar naquele país.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('do you want to live in this city')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          6. <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('do you want to live')}
-                          >Do you want to live</span> in this city?
-                        </p>
-                        <p className="text-sm text-gray-600">Você quer morar nesta cidade?</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('we don-t live here')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          7. We <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('don-t live')}
-                          >don't live</span> here.
-                        </p>
-                        <p className="text-sm text-gray-600">Nós não moramos aqui.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('they don-t understand that language')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          8. They <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('don-t understand')}
-                          >don't understand</span> that language.
-                        </p>
-                        <p className="text-sm text-gray-600">Eles não entendem aquele idioma.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('where do you study english')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          9. <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('where do you study')}
-                          >Where do you study</span> English?
-                        </p>
-                        <p className="text-sm text-gray-600">Onde você estuda inglês?</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group">
-                    <div className="flex items-start">
-                      <button 
-                        onClick={() => playAudio('where do you want to eat')} 
-                        className="mr-3 mt-1 text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0"
-                        aria-label="Play audio"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 a1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828a1 1 0 010-1.415z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      <div>
-                        <p className="text-lg font-medium">
-                          10. <span className="text-blue-600 font-bold cursor-pointer hover:text-blue-800"
-                            onClick={() => playAudio('where do you want to eat')}
-                          >Where do you want to eat</span>?
-                        </p>
-                        <p className="text-sm text-gray-600">Onde você quer comer?</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Container das imagens - 1/3 da largura em grandes */}
-                <div className="lg:w-1/3 flex flex-col gap-4">
-                  <div className="bg-white rounded-2xl p-4 shadow-md h-full">
-                    <div className="relative h-64 w-full">
-                      <img
-                        src={cityImage}
-                        alt="Cidades"
-                        className="rounded-xl object-cover w-full h-full"
+          {sections.speakNow && (
+            <div className="p-8">
+              {/* Galeria de Bandeiras - COM AS IMAGENS FORNECIDAS */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🌍 Countries and Languages - Click to select and change language</h3>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+                  {flagImages.map((src, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative w-full aspect-[3/2] bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-3 transition-all duration-200 ${
+                        selectedFlag === src ? 'border-blue-500 shadow-md scale-105' : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setSelectedFlag(src)}
+                    >
+                      <Image 
+                        src={src} 
+                        alt={`Flag ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        quality={85}
+                        priority={index < 4}
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIGZpbGw9IiNmM2YzZjMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtc2l6ZT0iMTIiPkZsYWc8L3RleHQ+PC9zdmc+';
+                        }}
                       />
+                      <div className={`absolute inset-0 transition-opacity duration-200 ${
+                        selectedFlag === src ? 'bg-blue-500 bg-opacity-20' : 'bg-black bg-opacity-0 hover:bg-opacity-10'
+                      }`} />
                     </div>
-                    <p className="text-center mt-2 text-gray-700 italic">
-                      Cidades e lugares para viver
-                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Diálogos de Prática */}
+              <div className="space-y-6 mb-8">
+                <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    {/* Container de Imagem */}
+                    <div className="w-full md:w-32 flex-shrink-0">
+                      <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
+                        selectedFlag === selectedFlag ? 'border-blue-400 shadow-md' : 'border-gray-300'
+                      }`}>
+                        <Image 
+                          src={selectedFlag} 
+                          alt="Selected flag" 
+                          fill
+                          className="object-cover"
+                          quality={90}
+                          priority
+                          sizes="128px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjNmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIxMiI+RmxhZzwvdGV4dD48L3N2Zz4=';
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Conteúdo do Diálogo */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Practice this dialogue about languages. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
+                        </p>
+                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-blue-700">Question:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[0].question} 
+                              highlightedWords={practiceDialogs[0].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-green-700">Response:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[0].response} 
+                              highlightedWords={practiceDialogs[0].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="bg-white rounded-2xl p-4 shadow-md h-full">
-                    <div className="relative h-64 w-full">
-                      <img
-                        src={countryImage}
-                        alt="Países"
-                        className="rounded-xl object-cover w-full h-full"
-                      />
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border-2 border-blue-200 shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-4 items-start">
+                    {/* Container de Imagem */}
+                    <div className="w-full md:w-32 flex-shrink-0">
+                      <div className={`relative w-32 h-32 rounded-lg overflow-hidden border-3 mx-auto ${
+                        selectedFood === selectedFood ? 'border-blue-400 shadow-md' : 'border-gray-300'
+                      }`}>
+                        <Image 
+                          src={selectedFood} 
+                          alt="Selected food" 
+                          fill
+                          className="object-cover"
+                          quality={90}
+                          priority
+                          sizes="128px"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iI2YzZjNmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIxMiI+Rm9vZDwvdGV4dD48L3N2Zz4=';
+                          }}
+                        />
+                      </div>
                     </div>
-                    <p className="text-center mt-2 text-gray-700 italic">
-                      Países e culturas diferentes
-                    </p>
+
+                    {/* Conteúdo do Diálogo */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Practice spelling food names. Click on <span className="text-red-600 font-semibold">red words</span> to hear pronunciation:
+                        </p>
+                        <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-blue-700">Question:</p>
+                            <HighlightedText 
+                              text={practiceDialogs[1].question} 
+                              highlightedWords={practiceDialogs[1].highlighted}
+                              onWordClick={handleWordClick}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-green-700">Response:</p>
+                            <div className="text-lg font-mono bg-white p-2 rounded border border-blue-200">
+                              {practiceDialogs[1].response.split(' ').map((letter, index) => (
+                                <span
+                                  key={index}
+                                  className="text-red-600 font-bold cursor-pointer hover:bg-yellow-100 px-1 rounded mx-px"
+                                  onClick={() => handleWordClick(letter.replace('-', ''))}
+                                >
+                                  {letter}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Galeria de Comidas Internacionais */}
+              <div>
+                <h3 className="text-xl font-bold text-blue-800 mb-4">🍽️ International Foods - Click to select and spell food names</h3>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {foodImages.map((src, index) => (
+                    <div 
+                      key={index} 
+                      className={`relative w-full aspect-[3/2] bg-gray-100 rounded-lg overflow-hidden cursor-pointer border-3 transition-all duration-200 ${
+                        selectedFood === src ? 'border-blue-500 shadow-md scale-105' : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => setSelectedFood(src)}
+                    >
+                      <Image 
+                        src={src} 
+                        alt={`Food ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        quality={85}
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIGZpbGw9IiNmM2YzZjMiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiIGZvbnQtc2l6ZT0iMTIiPkZvb2Q8L3RleHQ+PC9zdmc+';
+                        }}
+                      />
+                      <div className={`absolute inset-0 transition-opacity duration-200 ${
+                        selectedFood === src ? 'bg-blue-500 bg-opacity-20' : 'bg-black bg-opacity-0 hover:bg-opacity-10'
+                      }`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Seção 6 - Check It Out (estilo print) */}
-        <div className="bg-white border-2 border-blue-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
-          <div className="bg-blue-500 text-white py-4 px-8 flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold">CHECK IT OUT!</h2>
-              <p className="mt-2 text-blue-100 italic">
-                Pratique estruturas essenciais para falar sobre onde mora e compreensão
-              </p>
+        {/* TUNE IN YOUR EARS - SEÇÃO COMPLETAMENTE ATUALIZADA */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🎧 TUNE IN YOUR EARS</h2>
+              <button
+                onClick={() => toggleSection('tuneIn')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.tuneIn ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row">
-            {/* Coluna esquerda - Perguntas e respostas */}
-            <div className="bg-blue-900 text-white flex-1 p-6 space-y-4 text-xl">
-              <div className="mb-4">
-                <h3 className="font-bold text-lg mb-2 text-yellow-300">Respostas Simples:</h3>
-                <p className="text-sm text-blue-200 mb-2">
-                  Use <span className="font-bold">"Yes, I do"</span> para respostas positivas e 
-                  <span className="font-bold"> "No, I don't"</span> para respostas negativas quando a pergunta começa com "Do you...".
+          {sections.tuneIn && (
+            <div className="p-8">
+              <div className="mb-8 text-center">
+                <h3 className="text-2xl font-bold text-teal-700 mb-4">
+                  Watch the video and answer the questions below:
+                </h3>
+               
+                {/* Container do vídeo do YouTube ATUALIZADO */}
+                <div className="bg-black rounded-xl overflow-hidden shadow-2xl mx-auto max-w-4xl">
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src="https://www.youtube.com/embed/2FdrSYbwbXM"
+                      title="Languages and Countries Listening Practice"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-[400px] md:h-[500px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-teal-600">
+                  <p>Video: English Listening Practice - Languages and Countries</p>
+                </div>
+              </div>
+
+              {/* Vocabulary Help - ATUALIZADO */}
+              <div className="mb-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">📖 Key Vocabulary from the Video:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Language</span>
+                      <span className="text-teal-600">idioma</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Country</span>
+                      <span className="text-teal-600">país</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To visit</span>
+                      <span className="text-teal-600">visitar</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To learn</span>
+                      <span className="text-teal-600">aprender</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Culture</span>
+                      <span className="text-teal-600">cultura</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Travel</span>
+                      <span className="text-teal-600">viagem</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">To communicate</span>
+                      <span className="text-teal-600">comunicar</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Native speaker</span>
+                      <span className="text-teal-600">falante nativo</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">International</span>
+                      <span className="text-teal-600">internacional</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                      <span className="font-medium text-teal-700">Experience</span>
+                      <span className="text-teal-600">experiência</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions Section - ATUALIZADA */}
+              <div className="space-y-6 mb-8">
+                {videoAnswers.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-teal-200 shadow-md">
+                    <h4 className="text-lg font-bold text-teal-700 mb-3">
+                      {question.question}
+                      {question.isPersonal && (
+                        <span className="ml-2 text-sm font-normal text-teal-500">(Personal answer)</span>
+                      )}
+                    </h4>
+                   
+                    {question.vocabulary && (
+                      <div className="mb-3 p-3 bg-teal-50 rounded-lg">
+                        <p className="text-sm font-medium text-teal-600 mb-1">Vocabulary hints:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {question.vocabulary.map((word, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-teal-700 font-medium">{word.english}</span>
+                              <span className="text-teal-600">- {word.portuguese}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <textarea
+                      value={question.userAnswer}
+                      onChange={(e) => handleVideoAnswerChange(question.id, e.target.value)}
+                      placeholder="Write your answer here..."
+                      className="w-full h-24 p-3 border border-teal-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                    />
+
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => checkVideoAnswer(question.id)}
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md transition font-medium"
+                      >
+                        Check Answer
+                      </button>
+                      <button
+                        onClick={() => handleVideoAnswerChange(question.id, "")}
+                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Learning Tips */}
+              <div className="mt-8 bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">💡 Tips for Better Listening:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-teal-700 text-sm">
+                  <li><strong>Focus on language vocabulary:</strong> Pay attention to words related to countries, languages, and international communication.</li>
+                  <li><strong>Listen for country names:</strong> Note when specific countries or languages are mentioned in the video.</li>
+                  <li><strong>Identify personal experiences:</strong> Some questions ask for your opinion, others ask for information from the video content.</li>
+                  <li><strong>Use the vocabulary hints:</strong> The provided words will help you understand the main concepts.</li>
+                  <li><strong>Watch multiple times if needed:</strong> Pause and rewind the video to catch all the details about languages and countries.</li>
+                </ul>
+              </div>
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={saveVideoAnswers}
+                  className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+                >
+                  Save My Answers
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SUBSTITUTION PRACTICE 1 */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-green-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🔄 SUBSTITUTION PRACTICE I</h2>
+              <button 
+                onClick={() => toggleSection('substitution1')}
+                className="ml-4 p-2 rounded-full hover:bg-green-600 transition"
+              >
+                {sections.substitution1 ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.substitution1 && (
+            <div className="p-8">
+              <div className="bg-green-100 border-2 border-green-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">
+                  ✍️ Substitution Practice I – 3' - Click on the options to change the sentences:
+                </h3>
+                
+                <div className="space-y-6">
+                  {subs1Exercises.map((exercise) => {
+                    const currentSentence = exercise.base.replace('{0}', exercise.options[exercise.currentIndex]);
+                    
+                    return (
+                      <div key={exercise.key} className="bg-white p-4 rounded-lg border border-green-200">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+                          <p className="font-medium text-gray-700 flex-1">
+                            <span className="text-green-600">{exercise.original}</span>
+                          </p>
+                        </div>
+                        
+                        <div className="mb-3 p-3 bg-green-50 rounded-md">
+                          <p className="text-green-700 font-medium">{currentSentence}</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {exercise.options.map((option, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSubs1OptionClick(exercise.key, index)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                                exercise.currentIndex === index
+                                  ? 'bg-green-500 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO NEGATIVE */}
+        <div className="bg-red-50 border-2 border-red-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-red-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">➖ CHANGE INTO NEGATIVE</h2>
+              <button 
+                onClick={() => toggleSection('negative')}
+                className="ml-4 p-2 rounded-full hover:bg-red-600 transition"
+              >
+                {sections.negative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.negative && (
+            <div className="p-8">
+              <div className="bg-red-100 border-2 border-red-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-red-800 mb-4">
+                  ⛔ Change into Negative – 2' - Transform to negative:
+                </h3>
+                
+                <div className="space-y-4">
+                  {negativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-red-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write negative form..."
+                          value={writtenAnswers[exercise.key] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(exercise.key, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-red-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(exercise.key, writtenAnswers[exercise.key] || "", exercise.answer)}
+                          className="bg-red-500 text-white py-2 px-3 rounded-md hover:bg-red-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[exercise.key] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[exercise.key]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SUBSTITUTION PRACTICE 2 */}
+        <div className="bg-purple-50 border-2 border-purple-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-purple-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">🔄 SUBSTITUTION PRACTICE II</h2>
+              <button 
+                onClick={() => toggleSection('substitution2')}
+                className="ml-4 p-2 rounded-full hover:bg-purple-600 transition"
+              >
+                {sections.substitution2 ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.substitution2 && (
+            <div className="p-8">
+              <div className="bg-purple-100 border-2 border-purple-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-purple-800 mb-4">
+                  🔄 Substitution Practice II – 3' - Click to substitute:
+                </h3>
+                
+                <div className="space-y-6">
+                  {subs2Exercises.map((exercise) => {
+                    const baseSentence = exercise.correctAnswer.split(' ').map(word => {
+                      const cleanWord = word.replace('.', '').replace('?', '');
+                      return exercise.options.includes(cleanWord) ? '{0}' : word;
+                    }).join(' ');
+                    
+                    const currentSentence = baseSentence.replace('{0}', exercise.options[exercise.currentIndex]);
+                    
+                    return (
+                      <div key={exercise.key} className="bg-white p-4 rounded-lg border border-purple-200">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+                          <p className="font-medium text-gray-700 flex-1">
+                            <span className="text-purple-600">{exercise.original}</span>
+                          </p>
+                        </div>
+                        
+                        <div className="mb-3 p-3 bg-purple-50 rounded-md">
+                          <p className="text-purple-700 font-medium">{currentSentence}</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {exercise.options.map((option, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSubs2OptionClick(exercise.key, index)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
+                                exercise.currentIndex === index
+                                  ? 'bg-purple-500 text-white'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO AFFIRMATIVE */}
+        <div className="bg-teal-50 border-2 border-teal-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-teal-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">➕ CHANGE INTO AFFIRMATIVE</h2>
+              <button 
+                onClick={() => toggleSection('affirmative')}
+                className="ml-4 p-2 rounded-full hover:bg-teal-600 transition"
+              >
+                {sections.affirmative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.affirmative && (
+            <div className="p-8">
+              <div className="bg-teal-100 border-2 border-teal-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-teal-800 mb-4">
+                  Change into Affirmative - 2' - Transform to affirmative:
+                </h3>
+                
+                <div className="space-y-4">
+                  {affirmativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-teal-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write affirmative form..."
+                          value={writtenAnswers[`aff-${exercise.key}`] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(`aff-${exercise.key}`, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-teal-300 rounded-md text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(`aff-${exercise.key}`, writtenAnswers[`aff-${exercise.key}`] || "", exercise.answer)}
+                          className="bg-teal-500 text-white py-2 px-3 rounded-md hover:bg-teal-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[`aff-${exercise.key}`] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[`aff-${exercise.key}`]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CHANGE INTO INTERROGATIVE */}
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-[30px] shadow-lg mb-10 overflow-hidden">
+          <div className="bg-orange-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">❓ CHANGE INTO INTERROGATIVE</h2>
+              <button 
+                onClick={() => toggleSection('interrogative')}
+                className="ml-4 p-2 rounded-full hover:bg-orange-600 transition"
+              >
+                {sections.interrogative ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.interrogative && (
+            <div className="p-8">
+              <div className="bg-orange-100 border-2 border-orange-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-orange-800 mb-4">
+                  Change into Interrogative - 2' - Transform to questions:
+                </h3>
+                
+                <div className="space-y-4">
+                  {interrogativeExercises.map((exercise) => (
+                    <div key={exercise.key} className="bg-white p-4 rounded-lg border border-orange-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                        <p className="font-medium text-gray-700 flex-1">
+                          {exercise.sentence}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Write question form..."
+                          value={writtenAnswers[`int-${exercise.key}`] || ""}
+                          onChange={(e) => handleWrittenAnswerChange(`int-${exercise.key}`, e.target.value)}
+                          className="flex-1 px-3 py-2 border border-orange-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+                        <button
+                          onClick={() => handleCheckAnswer(`int-${exercise.key}`, writtenAnswers[`int-${exercise.key}`] || "", exercise.answer)}
+                          className="bg-orange-500 text-white py-2 px-3 rounded-md hover:bg-orange-600 transition text-sm"
+                        >
+                          Check
+                        </button>
+                      </div>
+                      
+                      {showAnswerResults[`int-${exercise.key}`] && (
+                        <AnswerResult 
+                          isCorrect={answerResults[`int-${exercise.key}`]} 
+                          correctAnswer={exercise.answer}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* QUESTIONS */}
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-[30px] shadow-lg overflow-hidden mb-10">
+          <div className="bg-indigo-500 text-white py-4 px-8 flex items-center justify-between">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">💬 QUESTIONS ABOUT LANGUAGES & COUNTRIES</h2>
+              <button 
+                onClick={() => toggleSection('questions')}
+                className="ml-4 p-2 rounded-full hover:bg-indigo-600 transition"
+              >
+                {sections.questions ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+              </button>
+            </div>
+          </div>
+
+          {sections.questions && (
+            <div className="p-8">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4">
+                  Answer these personal questions about languages and countries:
+                </h3>
+                <p className="text-indigo-600 mb-6">
+                  Practice writing about your international experiences and language preferences.
                 </p>
               </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("yes-i-do-no-i-dont")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• Do you live here? → <span className="font-bold">Yes, I do. / No, I don't.</span></p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("yes-i-do-no-i-dont")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• Do you understand? → <span className="font-bold">Yes, I do. / No, I don't.</span></p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("yes-i-do-no-i-dont")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• Do you want to study? → <span className="font-bold">Yes, I do. / No, I don't.</span></p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("yes-i-do-no-i-dont")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• Do you study English? → <span className="font-bold">Yes, I do. / No, I don't.</span></p>
-              </div>
-            </div>
 
-            {/* Coluna central - Imagem e balão */}
-            <div className="bg-white flex-1 p-6 flex flex-col items-center justify-center text-xl relative">
-              <img
-                src={mainImage}
-                alt="Pessoa em casa"
-                className="rounded-full w-40 h-40 object-cover mb-4"
-              />
-              <div className="bg-yellow-200 text-black px-4 py-2 rounded-xl shadow-md text-center">
-                Where do you live? <span className="font-bold">I live in Brazil!</span>
+              <div className="space-y-6">
+                {personalQuestions.map((question) => (
+                  <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-indigo-200 shadow-md">
+                    <h4 className="text-lg font-bold text-indigo-700 mb-3">
+                      {question.question}
+                    </h4>
+                    
+                    <textarea
+                      value={writtenAnswers[`q-${question.id}`] || ""}
+                      onChange={(e) => handleWrittenAnswerChange(`q-${question.id}`, e.target.value)}
+                      placeholder={question.placeholder}
+                      className="w-full h-24 p-3 border border-indigo-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+                ))}
               </div>
-              <div className="mt-4 text-center text-sm text-gray-600">
-                <p>Use <span className="font-bold">"do"</span> para perguntas e respostas simples</p>
-                <p>Exemplo: "Do you live here?" → "Yes, I <span className="font-bold">do</span>"</p>
-              </div>
-            </div>
 
-            {/* Coluna direita - Preposições */}
-            <div className="bg-blue-900 text-white flex-1 p-6 space-y-4 text-xl">
-              <h3 className="font-bold text-lg mb-2">Preposições:</h3>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("in brazil")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• <span className="font-bold">in</span> Brazil</p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("in this country")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• <span className="font-bold">in</span> this country</p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("in that city")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• <span className="font-bold">in</span> that city</p>
-              </div>
-              <div className="flex items-center group">
-                <button 
-                  onClick={() => playAudio("abroad")}
-                  className="mr-2 text-blue-200 hover:text-white transition-colors"
-                  aria-label="Play audio"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  </svg>
-                </button>
-                <p>• live <span className="font-bold">abroad</span></p>
+              <div className="mt-8 bg-indigo-100 border-2 border-indigo-300 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4">💡 Writing Tips for International Topics:</h3>
+                <ul className="list-disc pl-5 space-y-2 text-indigo-700 text-sm">
+                  <li>Use specific country names and language names in your answers</li>
+                  <li>Practice using different pronouns: he, she, they, we</li>
+                  <li>Describe cultural differences and similarities</li>
+                  <li>Mention traditional foods from different countries</li>
+                  <li>Talk about your language learning experiences</li>
+                  <li>Save your answers to track your progress in international communication</li>
+                </ul>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Botão para próxima lição */}
-        <div className="flex justify-center gap-4 mt-8">
+        {/* Save Button and Navigation */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-8">
           <button
-            onClick={() => router.push("/cursos/lesson4")}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+            onClick={saveAllAnswers}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300"
           >
-            &larr; Lição Anterior
+            💾 Save All My Answers
           </button>
-          <button
-            onClick={() => router.push("/cursos/lesson6")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
-          >
-            Próxima Lição &rarr;
-          </button>
-        </div>  
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => router.push("/cursos/lesson7")}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+            >
+              &larr; Previous Lesson
+            </button>
+            <button
+              onClick={() => router.push("/cursos/lesson9")}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors"
+            >
+              Next Lesson &rarr;
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
